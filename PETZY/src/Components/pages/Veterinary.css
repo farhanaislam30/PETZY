@@ -1,0 +1,61 @@
+.container-vet {
+  margin-top: 80px;
+  padding: 50px 15px;
+}
+
+.vet-header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.vet-header h1 {
+  color: rgb(63, 136, 238);
+  font-weight: bold;
+}
+
+.vet-header p {
+  font-size: 1.2rem;
+  color: #6c757d; /* Bootstrap text-muted color */
+  font-weight: 600;
+}
+
+.vet-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: none;
+  border-radius: 10px;
+}
+
+.vet-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.vet-card img {
+  height: 250px;
+  object-fit: cover;
+  border-radius: 10px 10px 0 0;
+}
+
+.vet-card .card-title {
+  font-weight: bold;
+}
+
+.vet-card .card-text {
+  color: rgb(63, 136, 238);
+}
+
+.vet-social {
+  text-align: center;
+  margin-top: 50px;
+}
+
+.vet-social .social-links a {
+  font-size: 1.3rem;
+  color: #343a40; /* text-dark */
+  margin: 0 8px;
+  transition: color 0.3s ease;
+}
+
+.vet-social .social-links a:hover {
+  color: rgb(63, 136, 238);
+}
