@@ -61,8 +61,12 @@ export const updateUserByEmail = async (req, res) => {
   const { email } = req.params;
   const { name: newName, email: newEmail, phone, address } = req.body;
 
+  console.log("[userController] updateUserByEmail called");
+  console.log("[userController] params email:", email);
+  console.log("[userController] body:", { name: newName, email: newEmail, phone, address });
+
   const user = await User.findOne({ email });
-  console.log(user);
+  console.log("[userController] Found user:", user);
 
   if (!user) {
     return res.status(404).json({ message: "User not found" });
@@ -78,14 +82,18 @@ export const updateUserByEmail = async (req, res) => {
   user.name = newName;
   
   // Update phone and address if provided
+  console.log("[userController] Before update - phone:", user.phone, "address:", user.address);
+  console.log("[userController] Incoming phone:", phone, "address:", address);
   if (phone !== undefined) {
     user.phone = phone;
   }
   if (address !== undefined) {
     user.address = address;
   }
+  console.log("[userController] After update - phone:", user.phone, "address:", user.address);
   
-  user.save();
+  await user.save();
+  console.log("[userController] User saved successfully");
 
   return res.status(200).json({ 
     message: "User updated successfully",

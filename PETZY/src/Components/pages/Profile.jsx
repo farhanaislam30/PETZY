@@ -110,11 +110,15 @@ const Profile = () => {
         return;
       }
       setIsAdmin(false);
+      const localPhone = localStorage.getItem('petzy_user_phone');
+      const localAddress = localStorage.getItem('petzy_user_address');
+      
       setUserInfo({
         name: decoded.name || "",
         email: decoded.email || "",
-        phone: decoded.phone || "",
-        address: decoded.address || "",
+        // Prefer localStorage values if JWT doesn't have them
+        phone: decoded.phone || localPhone || "",
+        address: decoded.address || localAddress || "",
       });
     }
     
@@ -157,9 +161,7 @@ const Profile = () => {
       // Fetch orders
       const ordersResponse = await axios.get(`${API_BASE}/api/orders`);
       const allOrders = ordersResponse.data.orders || ordersResponse.data || [];
-      const userOrders = allOrders.filter(
-        order => order.customerEmail === email
-      );
+      const userOrders = allOrders.filter(order => order.customerEmail === email);
       setOrders(userOrders);
       
       // Fetch appointments
@@ -173,7 +175,6 @@ const Profile = () => {
       setPetInterests(userPetInterests);
       
     } catch (err) {
-      console.error("Error fetching user data:", err);
       setError("Failed to load user data");
     }
     setLoading(false);
@@ -189,26 +190,48 @@ const Profile = () => {
       const token = localStorage.getItem("token");
       const email = decodeJWT(token)?.email;
       
-      // Update user profile via API
-      const response = await axios.put(`${API_BASE}/users/${email}`, {
+      if (!email) {
+        setError("Unable to identify user. Please log in again.");
+        setSubmitting(false);
+        return;
+      }
+      
+      const apiUrl = `${API_BASE}/users/${email}`;
+      const response = await axios.put(apiUrl, {
         name: values.name,
         email: values.email,
         phone: values.phone,
         address: values.address,
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       
       if (response.data.user) {
+        const updatedUser = response.data.user;
         setUserInfo(prev => ({
           ...prev,
-          phone: response.data.user.phone,
-          address: response.data.user.address,
+          phone: updatedUser.phone,
+          address: updatedUser.address,
         }));
+        localStorage.setItem('petzy_user_phone', updatedUser.phone || '');
+        localStorage.setItem('petzy_user_address', updatedUser.address || '');
       }
       
       setSuccess("Profile updated successfully!");
     } catch (err) {
-      console.error("Error updating profile:", err);
-      setError("Failed to update profile");
+      if (err.response?.status === 404) {
+        setError("User not found. Please log in again.");
+      } else if (err.response?.status === 401) {
+        setError("Authentication failed. Please log in again.");
+      } else if (err.response?.status === 400) {
+        setError(err.response.data?.message || "Invalid data provided");
+      } else if (err.code === 'ECONNREFUSED') {
+        setError("Cannot connect to server. Is the backend running?");
+      } else {
+        setError("Failed to update profile: " + (err.response?.data?.message || err.message));
+      }
     }
     setSubmitting(false);
   };
@@ -347,23 +370,21 @@ const Profile = () => {
         {/* Tabs Section */}
         <Grid item xs={12} md={8}>
           <Paper sx={{ width: "100%" }}>
-            <Tabs
-              value={tabValue}
-              onChange={handleTabChange}
-              indicatorColor="primary"
-              textColor="primary"
-              variant="fullWidth"
-            >
-              <Tab icon={<Person />} label="Edit Profile" iconPosition="start" />
-              <Tab icon={<LocationOn />} label="My Addresses" iconPosition="start" />
-              {!isAdmin && (
-                <>
-                  <Tab icon={<ShoppingCart />} label="Purchase History" iconPosition="start" />
-                  <Tab icon={<CalendarMonth />} label="Appointments" iconPosition="start" />
-                  <Tab icon={<Pets />} label="Pet Interests" iconPosition="start" />
-                </>
-              )}
-            </Tabs>
+            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+              <Tabs
+                value={tabValue}
+                onChange={handleTabChange}
+                indicatorColor="primary"
+                textColor="primary"
+                variant="fullWidth"
+              >
+                <Tab icon={<Person />} label="Edit Profile" iconPosition="start" />
+                <Tab icon={<LocationOn />} label="My Addresses" iconPosition="start" />
+                <Tab icon={<ShoppingCart />} label="Purchase History" iconPosition="start" />
+                <Tab icon={<CalendarMonth />} label="Appointments" iconPosition="start" />
+                <Tab icon={<Pets />} label="Pet Interests" iconPosition="start" />
+              </Tabs>
+            </Box>
             
             {/* Edit Profile Tab */}
             <TabPanel value={tabValue} index={0}>
@@ -510,9 +531,8 @@ const Profile = () => {
               )}
             </TabPanel>
             
-            {/* Purchase History Tab - Only for regular users */}
-            {!isAdmin && (
-              <TabPanel value={tabValue} index={2}>
+            {/* Purchase History Tab - Always rendered */}
+            <TabPanel value={tabValue} index={2}>
               <Typography variant="h6" sx={{ mb: 3 }}>My Purchase History</Typography>
               {orders.length > 0 ? (
                 <TableContainer>
@@ -567,11 +587,9 @@ const Profile = () => {
                 </Typography>
               )}
             </TabPanel>
-            )}
             
-            {/* Appointments Tab - Only for regular users */}
-            {!isAdmin && (
-              <TabPanel value={tabValue} index={3}>
+            {/* Appointments Tab - Always rendered */}
+            <TabPanel value={tabValue} index={3}>
               <Typography variant="h6" sx={{ mb: 3 }}>My Appointments</Typography>
               {appointments.length > 0 ? (
                 <TableContainer>
@@ -618,11 +636,9 @@ const Profile = () => {
                 </Typography>
               )}
             </TabPanel>
-            )}
             
-            {/* Pet Interests Tab - Only for regular users */}
-            {!isAdmin && (
-              <TabPanel value={tabValue} index={4}>
+            {/* Pet Interests Tab - Always rendered */}
+            <TabPanel value={tabValue} index={4}>
               <Typography variant="h6" sx={{ mb: 3 }}>Pet Adoption Requests</Typography>
               {petInterests.length > 0 ? (
                 <TableContainer>
@@ -657,7 +673,6 @@ const Profile = () => {
                 </Typography>
               )}
             </TabPanel>
-            )}
           </Paper>
         </Grid>
       </Grid>
