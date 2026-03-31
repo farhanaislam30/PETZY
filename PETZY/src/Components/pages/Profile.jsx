@@ -23,8 +23,14 @@ import {
   Snackbar,
   Avatar,
   Divider,
+  IconButton,
+  Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
-import { Person, Email, Phone, LocationOn, ShoppingCart, CalendarMonth } from "@mui/icons-material";
+import { Person, Email, Phone, LocationOn, ShoppingCart, CalendarMonth, Add, Edit, Delete, Star, StarBorder, Pets } from "@mui/icons-material";
 
 const API_BASE = "http://localhost:3000";
 
@@ -74,6 +80,18 @@ const Profile = () => {
   // Data states
   const [orders, setOrders] = useState([]);
   const [appointments, setAppointments] = useState([]);
+  const [petInterests, setPetInterests] = useState([]);
+  
+  // Address management states
+  const [addresses, setAddresses] = useState([]);
+  const [addressDialogOpen, setAddressDialogOpen] = useState(false);
+  const [editingAddress, setEditingAddress] = useState(null);
+  const [newAddress, setNewAddress] = useState({
+    label: "",
+    fullAddress: "",
+    city: "",
+    phone: "",
+  });
   
   // Decode user from token on mount and check if admin
   useEffect(() => {
@@ -100,6 +118,26 @@ const Profile = () => {
       });
     }
     
+    // Load addresses from localStorage
+    const savedAddresses = localStorage.getItem("petzy_addresses");
+    if (savedAddresses) {
+      setAddresses(JSON.parse(savedAddresses));
+    } else {
+      // If user has an address from decoded token, add it as default address
+      if (decoded?.address) {
+        const defaultAddress = {
+          id: Date.now().toString(),
+          label: "Default Address",
+          fullAddress: decoded.address,
+          city: "",
+          phone: decoded.phone || "",
+          isDefault: true,
+        };
+        setAddresses([defaultAddress]);
+        localStorage.setItem("petzy_addresses", JSON.stringify([defaultAddress]));
+      }
+    }
+    
     fetchUserData();
   }, [navigate]);
   
@@ -117,16 +155,22 @@ const Profile = () => {
       const email = decodeJWT(token)?.email;
       
       // Fetch orders
-      const ordersResponse = await axios.get(`${API_BASE}/customer`);
-      const userOrders = ordersResponse.data.filter(
-        order => order.email === email
+      const ordersResponse = await axios.get(`${API_BASE}/api/orders`);
+      const allOrders = ordersResponse.data.orders || ordersResponse.data || [];
+      const userOrders = allOrders.filter(
+        order => order.customerEmail === email
       );
       setOrders(userOrders);
       
-      // For appointments, we'll check doctors (since there's no explicit appointment system yet)
-      // This would typically be a separate endpoint
-      const doctorsResponse = await axios.get(`${API_BASE}/doctors`);
-      setAppointments(doctorsResponse.data || []);
+      // Fetch appointments
+      const appointmentsResponse = await axios.get(`${API_BASE}/api/appointments/email/${email}`);
+      const userAppointments = appointmentsResponse.data.appointments || appointmentsResponse.data || [];
+      setAppointments(userAppointments);
+      
+      // Fetch pet interests (adoption requests)
+      const petInterestsResponse = await axios.get(`${API_BASE}/show-interest/email/${email}`);
+      const userPetInterests = petInterestsResponse.data.interests || petInterestsResponse.data || [];
+      setPetInterests(userPetInterests);
       
     } catch (err) {
       console.error("Error fetching user data:", err);
@@ -145,19 +189,25 @@ const Profile = () => {
       const token = localStorage.getItem("token");
       const email = decodeJWT(token)?.email;
       
-      // Update user profile via API (you may need to add this endpoint)
-      // For now, we'll store in localStorage as fallback
-      localStorage.setItem("userPhone", values.phone);
-      localStorage.setItem("userAddress", values.address);
-      
-      setUserInfo(prev => ({
-        ...prev,
+      // Update user profile via API
+      const response = await axios.put(`${API_BASE}/users/${email}`, {
+        name: values.name,
+        email: values.email,
         phone: values.phone,
         address: values.address,
-      }));
+      });
+      
+      if (response.data.user) {
+        setUserInfo(prev => ({
+          ...prev,
+          phone: response.data.user.phone,
+          address: response.data.user.address,
+        }));
+      }
       
       setSuccess("Profile updated successfully!");
     } catch (err) {
+      console.error("Error updating profile:", err);
       setError("Failed to update profile");
     }
     setSubmitting(false);
@@ -165,6 +215,83 @@ const Profile = () => {
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
+  };
+
+  // Address management functions
+  const handleOpenAddressDialog = (address = null) => {
+    if (address) {
+      setEditingAddress(address);
+      setNewAddress({
+        label: address.label,
+        fullAddress: address.fullAddress,
+        city: address.city,
+        phone: address.phone,
+      });
+    } else {
+      setEditingAddress(null);
+      setNewAddress({
+        label: "",
+        fullAddress: "",
+        city: "",
+        phone: "",
+      });
+    }
+    setAddressDialogOpen(true);
+  };
+
+  const handleCloseAddressDialog = () => {
+    setAddressDialogOpen(false);
+    setEditingAddress(null);
+  };
+
+  const handleSaveAddress = () => {
+    if (!newAddress.fullAddress) {
+      setError("Address is required");
+      return;
+    }
+
+    let updatedAddresses;
+    if (editingAddress) {
+      // Update existing address
+      updatedAddresses = addresses.map(addr =>
+        addr.id === editingAddress.id
+          ? { ...addr, ...newAddress }
+          : addr
+      );
+      setSuccess("Address updated successfully!");
+    } else {
+      // Add new address
+      const addressWithId = {
+        ...newAddress,
+        id: Date.now().toString(),
+        isDefault: addresses.length === 0, // First address is default
+      };
+      updatedAddresses = [...addresses, addressWithId];
+      setSuccess("Address added successfully!");
+    }
+
+    setAddresses(updatedAddresses);
+    localStorage.setItem("petzy_addresses", JSON.stringify(updatedAddresses));
+    handleCloseAddressDialog();
+  };
+
+  const handleDeleteAddress = (addressId) => {
+    if (window.confirm("Are you sure you want to delete this address?")) {
+      const updatedAddresses = addresses.filter(addr => addr.id !== addressId);
+      setAddresses(updatedAddresses);
+      localStorage.setItem("petzy_addresses", JSON.stringify(updatedAddresses));
+      setSuccess("Address deleted successfully!");
+    }
+  };
+
+  const handleSetDefaultAddress = (addressId) => {
+    const updatedAddresses = addresses.map(addr => ({
+      ...addr,
+      isDefault: addr.id === addressId,
+    }));
+    setAddresses(updatedAddresses);
+    localStorage.setItem("petzy_addresses", JSON.stringify(updatedAddresses));
+    setSuccess("Default address updated!");
   };
 
   if (loading) {
@@ -228,10 +355,12 @@ const Profile = () => {
               variant="fullWidth"
             >
               <Tab icon={<Person />} label="Edit Profile" iconPosition="start" />
+              <Tab icon={<LocationOn />} label="My Addresses" iconPosition="start" />
               {!isAdmin && (
                 <>
                   <Tab icon={<ShoppingCart />} label="Purchase History" iconPosition="start" />
                   <Tab icon={<CalendarMonth />} label="Appointments" iconPosition="start" />
+                  <Tab icon={<Pets />} label="Pet Interests" iconPosition="start" />
                 </>
               )}
             </Tabs>
@@ -311,9 +440,79 @@ const Profile = () => {
               </Formik>
             </TabPanel>
             
+            {/* My Addresses Tab */}
+            <TabPanel value={tabValue} index={1}>
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+                <Typography variant="h6">My Delivery Addresses</Typography>
+                <Button
+                  variant="contained"
+                  startIcon={<Add />}
+                  onClick={() => handleOpenAddressDialog()}
+                >
+                  Add Address
+                </Button>
+              </Box>
+              {addresses.length > 0 ? (
+                <Grid container spacing={2}>
+                  {addresses.map((address) => (
+                    <Grid item xs={12} sm={6} key={address.id}>
+                      <Paper sx={{ p: 2, position: "relative", border: address.isDefault ? "2px solid #1976d2" : "1px solid #e0e0e0" }}>
+                        {address.isDefault && (
+                          <Chip
+                            icon={<Star sx={{ fontSize: 14 }} />}
+                            label="Default"
+                            size="small"
+                            sx={{ position: "absolute", top: 8, right: 8, bgcolor: "#1976d2", color: "white" }}
+                          />
+                        )}
+                        <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
+                          {address.label || "Address"}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                          {address.fullAddress}
+                        </Typography>
+                        {address.city && (
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                            {address.city}
+                          </Typography>
+                        )}
+                        {address.phone && (
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                            Phone: {address.phone}
+                          </Typography>
+                        )}
+                        <Box sx={{ display: "flex", gap: 1 }}>
+                          <IconButton size="small" onClick={() => handleOpenAddressDialog(address)}>
+                            <Edit fontSize="small" />
+                          </IconButton>
+                          <IconButton size="small" color="error" onClick={() => handleDeleteAddress(address.id)}>
+                            <Delete fontSize="small" />
+                          </IconButton>
+                          {!address.isDefault && (
+                            <Button
+                              size="small"
+                              startIcon={<StarBorder fontSize="small" />}
+                              onClick={() => handleSetDefaultAddress(address.id)}
+                              sx={{ ml: 1 }}
+                            >
+                              Set Default
+                            </Button>
+                          )}
+                        </Box>
+                      </Paper>
+                    </Grid>
+                  ))}
+                </Grid>
+              ) : (
+                <Typography align="center" color="text.secondary">
+                  No addresses added yet. Click "Add Address" to add your first address.
+                </Typography>
+              )}
+            </TabPanel>
+            
             {/* Purchase History Tab - Only for regular users */}
             {!isAdmin && (
-              <TabPanel value={tabValue} index={1}>
+              <TabPanel value={tabValue} index={2}>
               <Typography variant="h6" sx={{ mb: 3 }}>My Purchase History</Typography>
               {orders.length > 0 ? (
                 <TableContainer>
@@ -332,17 +531,30 @@ const Profile = () => {
                         <TableRow key={order._id}>
                           <TableCell>{order._id?.slice(-8) || "N/A"}</TableCell>
                           <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
-                          <TableCell>{order.items?.length || "N/A"}</TableCell>
-                          <TableCell>৳{order.total || 0}</TableCell>
                           <TableCell>
-                            <Typography
-                              variant="body2"
+                            {order.items?.map((item, idx) => (
+                              <Box key={idx} sx={{ mb: 0.5 }}>
+                                <Typography variant="body2">
+                                  {item.productName} x{item.quantity}
+                                </Typography>
+                              </Box>
+                            ))}
+                          </TableCell>
+                          <TableCell>৳{order.total || order.totalAmount || 0}</TableCell>
+                          <TableCell>
+                            <Chip
+                              label={order.status || "Pending"}
+                              size="small"
                               sx={{
-                                color: order.status === "completed" ? "green" : "orange",
+                                bgcolor: order.status === "Delivered" ? "#e8f5e9" : 
+                                         order.status === "Processing" ? "#fff3e0" : 
+                                         order.status === "Shipped" ? "#e3f2fd" : "#f5f5f5",
+                                color: order.status === "Delivered" ? "#2e7d32" : 
+                                order.status === "Processing" ? "#ed6c02" : 
+                                order.status === "Shipped" ? "#1976d2" : "#666",
+                                fontWeight: 600,
                               }}
-                            >
-                              {order.status || "Pending"}
-                            </Typography>
+                            />
                           </TableCell>
                         </TableRow>
                       ))}
@@ -359,32 +571,42 @@ const Profile = () => {
             
             {/* Appointments Tab - Only for regular users */}
             {!isAdmin && (
-              <TabPanel value={tabValue} index={2}>
-              <Typography variant="h6" sx={{ mb: 3 }}>Booked Appointments</Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Available veterinary doctors - Contact them to book an appointment
-              </Typography>
+              <TabPanel value={tabValue} index={3}>
+              <Typography variant="h6" sx={{ mb: 3 }}>My Appointments</Typography>
               {appointments.length > 0 ? (
                 <TableContainer>
                   <Table>
                     <TableHead>
                       <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                         <TableCell>Doctor</TableCell>
-                        <TableCell>Specialization</TableCell>
-                        <TableCell>Experience</TableCell>
-                        <TableCell>Contact</TableCell>
+                        <TableCell>Date</TableCell>
+                        <TableCell>Time</TableCell>
+                        <TableCell>Status</TableCell>
+                        <TableCell>Notes</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {appointments.map((doctor) => (
-                        <TableRow key={doctor.email}>
-                          <TableCell>{doctor.name}</TableCell>
-                          <TableCell>{doctor.specialization}</TableCell>
-                          <TableCell>{doctor.experience} years</TableCell>
+                      {appointments.map((appointment) => (
+                        <TableRow key={appointment._id}>
+                          <TableCell>{appointment.doctorName}</TableCell>
+                          <TableCell>{appointment.date}</TableCell>
+                          <TableCell>{appointment.time}</TableCell>
                           <TableCell>
-                            <Typography variant="body2">{doctor.email}</Typography>
-                            <Typography variant="body2">{doctor.phone}</Typography>
+                            <Chip
+                              label={appointment.status || "Pending"}
+                              size="small"
+                              sx={{
+                                bgcolor: appointment.status === "Confirmed" ? "#e8f5e9" : 
+                                         appointment.status === "Pending" ? "#fff3e0" : 
+                                         appointment.status === "Cancelled" ? "#ffebee" : "#f5f5f5",
+                                color: appointment.status === "Confirmed" ? "#2e7d32" : 
+                                appointment.status === "Pending" ? "#ed6c02" : 
+                                appointment.status === "Cancelled" ? "#d32f2f" : "#666",
+                                fontWeight: 600,
+                              }}
+                            />
                           </TableCell>
+                          <TableCell>{appointment.notes || "-"}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -393,6 +615,45 @@ const Profile = () => {
               ) : (
                 <Typography align="center" color="text.secondary">
                   No appointments found
+                </Typography>
+              )}
+            </TabPanel>
+            )}
+            
+            {/* Pet Interests Tab - Only for regular users */}
+            {!isAdmin && (
+              <TabPanel value={tabValue} index={4}>
+              <Typography variant="h6" sx={{ mb: 3 }}>Pet Adoption Requests</Typography>
+              {petInterests.length > 0 ? (
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                        <TableCell>Pet ID</TableCell>
+                        <TableCell>Date</TableCell>
+                        <TableCell>Phone</TableCell>
+                        <TableCell>Living Situation</TableCell>
+                        <TableCell>Experience</TableCell>
+                        <TableCell>Other Pets</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {petInterests.map((interest, idx) => (
+                        <TableRow key={idx}>
+                          <TableCell>{typeof interest.petId === 'object' ? interest.petId.name || interest.petId : interest.petId}</TableCell>
+                          <TableCell>{new Date(interest.timestamp).toLocaleDateString()}</TableCell>
+                          <TableCell>{interest.phone}</TableCell>
+                          <TableCell>{interest.livingSituation}</TableCell>
+                          <TableCell>{interest.experience}</TableCell>
+                          <TableCell>{interest.otherPets || 'None'}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              ) : (
+                <Typography align="center" color="text.secondary">
+                  No pet adoption requests found
                 </Typography>
               )}
             </TabPanel>
@@ -408,6 +669,54 @@ const Profile = () => {
       <Snackbar open={!!success} autoHideDuration={6000} onClose={() => setSuccess(null)}>
         <Alert severity="success" onClose={() => setSuccess(null)}>{success}</Alert>
       </Snackbar>
+      
+      {/* Add/Edit Address Dialog */}
+      <Dialog open={addressDialogOpen} onClose={handleCloseAddressDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>{editingAddress ? "Edit Address" : "Add New Address"}</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Address Label (e.g., Home, Office)"
+            fullWidth
+            value={newAddress.label}
+            onChange={(e) => setNewAddress({ ...newAddress, label: e.target.value })}
+            sx={{ mb: 2, mt: 1 }}
+          />
+          <TextField
+            margin="dense"
+            label="Full Address"
+            fullWidth
+            required
+            multiline
+            rows={2}
+            value={newAddress.fullAddress}
+            onChange={(e) => setNewAddress({ ...newAddress, fullAddress: e.target.value })}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="dense"
+            label="City / Area"
+            fullWidth
+            value={newAddress.city}
+            onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="dense"
+            label="Contact Phone (Optional)"
+            fullWidth
+            value={newAddress.phone}
+            onChange={(e) => setNewAddress({ ...newAddress, phone: e.target.value })}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseAddressDialog}>Cancel</Button>
+          <Button onClick={handleSaveAddress} variant="contained">
+            {editingAddress ? "Update" : "Add"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

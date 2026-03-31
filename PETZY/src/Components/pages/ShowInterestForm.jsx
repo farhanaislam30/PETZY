@@ -89,11 +89,23 @@ const ShowInterestForm = ({ pet, onClose, onInterestSubmitted }) => {
 
     setIsSubmitting(true);
 
+    // Log what we're about to send
+    console.log("=== SHOW INTEREST FORM DEBUG ===");
+    console.log("Pet object:", pet);
+    console.log("Pet ID:", pet?.id, "Pet _id:", pet?._id);
+    
+    // Handle both id and _id from different data sources
+    const petId = pet?._id || pet?.id;
+    console.log("Selected petId:", petId);
+    
+    console.log("Form data:", JSON.stringify(formData, null, 2));
+    console.log("Final payload:", JSON.stringify({ ...formData, petId }, null, 2));
+
     try {
       const response = await fetch("http://localhost:3000/show-interest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, petId: pet.id }),
+        body: JSON.stringify({ ...formData, petId }),
       });
 
       const data = await response.json();

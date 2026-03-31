@@ -51,17 +51,24 @@ const Navbar = () => {
     const storedRole = localStorage.getItem("userRole");
     const storedName = localStorage.getItem("userName");
     
+    console.log('[Navbar Debug] Token exists:', !!token);
+    console.log('[Navbar Debug] storedRole:', storedRole);
+    console.log('[Navbar Debug] storedName:', storedName);
+    
     if (token) {
       setIsAuthenticated(true);
       
       // Try to get role from stored or decode from token
       if (storedRole) {
+        console.log('[Navbar Debug] Setting role from localStorage:', storedRole);
         setUserRole(storedRole);
       } else {
         const decoded = decodeJWT(token);
+        console.log('[Navbar Debug] Decoded JWT:', decoded);
         if (decoded) {
           setUserRole(decoded.role);
           localStorage.setItem("userRole", decoded.role);
+          console.log('[Navbar Debug] Set role from JWT:', decoded.role);
         }
       }
       
@@ -90,13 +97,6 @@ const Navbar = () => {
   };
 
   const isAdmin = userRole === 'admin';
-
-  // DEBUG: Log state for debugging
-  console.log('[DEBUG Navbar] isAuthenticated:', isAuthenticated);
-  console.log('[DEBUG Navbar] userRole:', userRole);
-  console.log('[DEBUG Navbar] isAdmin:', isAdmin);
-  console.log('[DEBUG Navbar] localStorage token:', !!localStorage.getItem('token'));
-  console.log('[DEBUG Navbar] localStorage userRole:', localStorage.getItem('userRole'));
 
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">

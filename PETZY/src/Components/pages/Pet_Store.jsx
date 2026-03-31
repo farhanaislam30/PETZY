@@ -27,7 +27,46 @@ const Pet_Store = () => {
   }, []);
 
   const handleAddToCart = (product) => {
-    navigate("/cart", { state: { product } });
+    // Get existing cart from localStorage or create empty array
+    const cartKey = "petzy_cart";
+    console.log("[Pet_Store] Adding product to cart:", product.name);
+    
+    let existingCart;
+    try {
+      const storedCart = localStorage.getItem(cartKey);
+      console.log("[Pet_Store] Current stored cart:", storedCart);
+      existingCart = storedCart ? JSON.parse(storedCart) : [];
+    } catch (error) {
+      console.error("[Pet_Store] Error parsing stored cart:", error);
+      existingCart = [];
+    }
+    
+    // Check if product already exists in cart
+    const existingIndex = existingCart.findIndex((item) => item.id === product._id || item.id === product.id);
+    
+    if (existingIndex > -1) {
+      // Product exists, increment quantity
+      existingCart[existingIndex].quantity += 1;
+    } else {
+      // Add new product to cart with quantity 1
+      const cartItem = {
+        id: product._id || product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        quantity: 1,
+        category: product.category || "Pet Supply",
+      };
+      existingCart.push(cartItem);
+    }
+    
+    // Save to localStorage
+    localStorage.setItem(cartKey, JSON.stringify(existingCart));
+    console.log("[Pet_Store] Cart saved to localStorage:", JSON.stringify(existingCart));
+    
+    // Show feedback and navigate to cart
+    alert(`${product.name} added to cart!`);
+    navigate("/cart");
   };
 
   if (loading) {

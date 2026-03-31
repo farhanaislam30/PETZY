@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const PetInterestSchema = new mongoose.Schema({
-  petId: { type: Number, required: true },
+  petId: { type: mongoose.Schema.Types.Mixed, required: true },
   email: { type: String, required: true },
   phone: { type: String, required: true },
   livingSituation: { type: String, required: true },

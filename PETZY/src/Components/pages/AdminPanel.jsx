@@ -15,8 +15,12 @@ import {
   CircularProgress,
   Chip,
   Grid,
+  Button,
+  Menu,
+  MenuItem,
+  IconButton,
 } from "@mui/material";
-import { ShoppingCart, Person, Email, Phone, LocationOn, CalendarMonth, ConfirmationNumber } from "@mui/icons-material";
+import { ShoppingCart, Person, Email, Phone, LocationOn, CalendarMonth, ConfirmationNumber, MoreVert } from "@mui/icons-material";
 
 const API_BASE = "http://localhost:3000";
 
@@ -36,23 +40,120 @@ const theme = {
 const AdminPanel = () => {
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState([]);
+  const [petInterests, setPetInterests] = useState([]);
+  const [appointments, setAppointments] = useState([]);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [appointmentAnchorEl, setAppointmentAnchorEl] = useState(null);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
 
   // Fetch orders on mount
   useEffect(() => {
     fetchOrders();
+    fetchPetInterests();
+    fetchAppointments();
   }, []);
 
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_BASE}/customer`);
-      setOrders(response.data);
+      const response = await axios.get(`${API_BASE}/api/orders`);
+      console.log("[AdminPanel] API Response:", JSON.stringify(response.data, null, 2));
+      const allOrders = response.data.orders || response.data || [];
+      setOrders(allOrders);
     } catch (err) {
       console.error("Error fetching orders:", err);
       setError("Failed to fetch orders");
     }
     setLoading(false);
+  };
+
+  const fetchPetInterests = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/show-interest`);
+      console.log("[AdminPanel] Pet Interests Response:", JSON.stringify(response.data, null, 2));
+      setPetInterests(response.data || []);
+    } catch (err) {
+      console.error("Error fetching pet interests:", err);
+    }
+  };
+
+  const fetchAppointments = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/api/appointments`);
+      console.log("[AdminPanel] Appointments Response:", JSON.stringify(response.data, null, 2));
+      const allAppointments = response.data.appointments || response.data || [];
+      
+      // Debug: Log each appointment's phone field
+      console.log("[AdminPanel] DEBUG - First appointment keys:", allAppointments.length > 0 ? Object.keys(allAppointments[0]) : "none");
+      allAppointments.forEach((apt, idx) => {
+        console.log(`[AdminPanel] DEBUG - Appointment ${idx}: customerPhone="${apt.customerPhone}", phone="${apt.phone}", fullPhone="${apt.fullPhone}", userId=${JSON.stringify(apt.userId)}`);
+      });
+      
+      setAppointments(allAppointments);
+    } catch (err) {
+      console.error("Error fetching appointments:", err);
+    }
+  };
+
+  const handleStatusUpdate = async (orderId, newStatus) => {
+    try {
+      // Make API call to update order status in backend
+      const response = await axios.put(`${API_BASE}/api/orders/${orderId}`, { status: newStatus });
+      
+      // Update local state with the updated order from the response
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          order._id === orderId ? { ...order, status: newStatus } : order
+        )
+      );
+      setSuccess(`Order status updated to ${newStatus}`);
+    } catch (err) {
+      console.error("Error updating order status:", err);
+      setError("Failed to update order status");
+    }
+    setAnchorEl(null);
+    setSelectedOrder(null);
+  };
+
+  const handleMenuOpen = (event, order) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedOrder(order);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSelectedOrder(null);
+  };
+
+  const handleAppointmentStatusUpdate = async (appointmentId, newStatus) => {
+    try {
+      const response = await axios.put(`${API_BASE}/api/appointments/${appointmentId}`, { status: newStatus });
+      
+      setAppointments(prevAppointments =>
+        prevAppointments.map(apt =>
+          apt._id === appointmentId ? { ...apt, status: newStatus } : apt
+        )
+      );
+      setSuccess(`Appointment status updated to ${newStatus}`);
+    } catch (err) {
+      console.error("Error updating appointment status:", err);
+      setError("Failed to update appointment status");
+    }
+    setAppointmentAnchorEl(null);
+    setSelectedAppointment(null);
+  };
+
+  const handleAppointmentMenuOpen = (event, appointment) => {
+    setAppointmentAnchorEl(event.currentTarget);
+    setSelectedAppointment(appointment);
+  };
+
+  const handleAppointmentMenuClose = () => {
+    setAppointmentAnchorEl(null);
+    setSelectedAppointment(null);
   };
 
   return (
@@ -105,7 +206,7 @@ const AdminPanel = () => {
         <Grid item xs={12} sm={4}>
           <Paper sx={{ p: 2.5, borderRadius: 2, textAlign: "center" }}>
             <Typography variant="h3" sx={{ fontWeight: 700, color: theme.success }}>
-              ৳{orders.reduce((acc, order) => acc + (parseFloat(order.total) || 0), 0).toFixed(2)}
+              ৳{orders.reduce((acc, order) => acc + (parseFloat(order.totalAmount) || 0), 0).toFixed(2)}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Total Revenue
@@ -173,6 +274,12 @@ const AdminPanel = () => {
                     <CalendarMonth sx={{ fontSize: 16, mr: 0.5, verticalAlign: "middle" }} />
                     Date
                   </TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>
+                    Status
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }} align="center">
+                    Actions
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -191,33 +298,56 @@ const AdminPanel = () => {
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {order.name}
+                        {order.customerName}
                       </Typography>
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2" color="text.secondary">
-                        {order.email}
+                        {order.customerEmail}
                       </Typography>
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2" color="text.secondary">
-                        {order.phone}
+                        {order.customerPhone}
                       </Typography>
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {order.address}
+                        {order.shippingAddress}
                       </Typography>
                     </TableCell>
                     <TableCell align="right">
                       <Typography variant="body2" sx={{ fontWeight: 600, color: theme.secondary }}>
-                        ৳{order.total}
+                        ৳{order.totalAmount}
                       </Typography>
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2" color="text.secondary">
                         {new Date(order.createdAt).toLocaleDateString()}
                       </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={order.status || "Pending"}
+                        size="small"
+                        sx={{
+                          bgcolor: order.status === "Delivered" ? "#e8f5e9" : 
+                                   order.status === "Processing" ? "#fff3e0" : 
+                                   order.status === "Shipped" ? "#e3f2fd" : "#f5f5f5",
+                          color: order.status === "Delivered" ? "#2e7d32" : 
+                                 order.status === "Processing" ? "#ed6c02" : 
+                                 order.status === "Shipped" ? "#1976d2" : "#666",
+                          fontWeight: 600,
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell align="center">
+                      <IconButton
+                        size="small"
+                        onClick={(e) => handleMenuOpen(e, order)}
+                      >
+                        <MoreVert />
+                      </IconButton>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -241,6 +371,188 @@ const AdminPanel = () => {
       <Snackbar open={!!error} autoHideDuration={6000} onClose={() => setError(null)}>
         <Alert severity="error" onClose={() => setError(null)} sx={{ borderRadius: 2 }}>{error}</Alert>
       </Snackbar>
+      <Snackbar open={!!success} autoHideDuration={6000} onClose={() => setSuccess(null)}>
+        <Alert severity="success" onClose={() => setSuccess(null)} sx={{ borderRadius: 2 }}>{success}</Alert>
+      </Snackbar>
+      
+      {/* Pet Interests Section */}
+      <Paper sx={{ borderRadius: 2, overflow: "hidden", mt: 3 }}>
+        <Box sx={{ p: 2, borderBottom: "1px solid #eee", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, color: theme.text }}>
+            Pet Adoption Requests
+          </Typography>
+          <Chip 
+            label={`${petInterests.length} requests`} 
+            size="small" 
+            sx={{ bgcolor: "#e8f5e9", color: theme.success, fontWeight: 600 }} 
+          />
+        </Box>
+        
+        {petInterests.length > 0 ? (
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow sx={{ bgcolor: "#f8f9fa" }}>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Pet ID</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Email</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Phone</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Living Situation</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Experience</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Date</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {petInterests.map((interest, index) => (
+                  <TableRow 
+                    key={interest._id}
+                    sx={{ 
+                      "&:hover": { bgcolor: "#f8f9fa" },
+                      borderBottom: index < petInterests.length - 1 ? "1px solid #f0f0f0" : "none",
+                    }}
+                  >
+                    <TableCell>#{interest.petId}</TableCell>
+                    <TableCell>{interest.email}</TableCell>
+                    <TableCell>{interest.phone}</TableCell>
+                    <TableCell>{interest.livingSituation}</TableCell>
+                    <TableCell>{interest.experience}</TableCell>
+                    <TableCell>
+                      {new Date(interest.timestamp).toLocaleDateString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        ) : (
+          <Box sx={{ p: 6, textAlign: "center" }}>
+            <Typography variant="h6" color="text.secondary">
+              No pet adoption requests yet
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Pet adoption requests will appear here
+            </Typography>
+          </Box>
+        )}
+      </Paper>
+
+      {/* Appointments Section */}
+      <Paper sx={{ borderRadius: 2, overflow: "hidden", mt: 3 }}>
+        <Box sx={{ p: 2, borderBottom: "1px solid #eee", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, color: theme.text }}>
+            Doctor Appointments
+          </Typography>
+          <Chip 
+            label={`${appointments.length} appointments`} 
+            size="small" 
+            sx={{ bgcolor: "#e3f2fd", color: theme.primary, fontWeight: 600 }} 
+          />
+        </Box>
+        
+        {appointments.length > 0 ? (
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow sx={{ bgcolor: "#f8f9fa" }}>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Customer</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Doctor</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Date</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Time</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Status</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Phone</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }} align="center">Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {appointments.map((apt, index) => (
+                  <TableRow 
+                    key={apt._id}
+                    sx={{ 
+                      "&:hover": { bgcolor: "#f8f9fa" },
+                      borderBottom: index < appointments.length - 1 ? "1px solid #f0f0f0" : "none",
+                    }}
+                  >
+                    <TableCell>{apt.customerName}</TableCell>
+                    <TableCell>{apt.doctorName}</TableCell>
+                    <TableCell>{apt.date}</TableCell>
+                    <TableCell>{apt.time}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={apt.status || "Pending"}
+                        size="small"
+                        sx={{
+                          bgcolor: apt.status === "Confirmed" ? "#e8f5e9" : 
+                                   apt.status === "Cancelled" ? "#ffebee" : "#fff3e0",
+                          color: apt.status === "Confirmed" ? "#2e7d32" : 
+                                 apt.status === "Cancelled" ? "#c62828" : "#ed6c02",
+                          fontWeight: 600,
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell>{apt.customerPhone || apt.userId?.phone || "N/A"}</TableCell>
+                    <TableCell align="center">
+                      <IconButton
+                        size="small"
+                        onClick={(e) => handleAppointmentMenuOpen(e, apt)}
+                      >
+                        <MoreVert />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        ) : (
+          <Box sx={{ p: 6, textAlign: "center" }}>
+            <Typography variant="h6" color="text.secondary">
+              No appointments yet
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Doctor appointments will appear here
+            </Typography>
+          </Box>
+        )}
+      </Paper>
+      
+      {/* Status Update Menu for Orders */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+      >
+        <MenuItem onClick={() => handleStatusUpdate(selectedOrder?._id, "Pending")}>
+          <Chip label="Pending" size="small" sx={{ mr: 1, bgcolor: "#f5f5f5", color: "#666" }} />
+          Mark as Pending
+        </MenuItem>
+        <MenuItem onClick={() => handleStatusUpdate(selectedOrder?._id, "Processing")}>
+          <Chip label="Processing" size="small" sx={{ mr: 1, bgcolor: "#fff3e0", color: "#ed6c02" }} />
+          Mark as Processing
+        </MenuItem>
+        <MenuItem onClick={() => handleStatusUpdate(selectedOrder?._id, "Shipped")}>
+          <Chip label="Shipped" size="small" sx={{ mr: 1, bgcolor: "#e3f2fd", color: "#1976d2" }} />
+          Mark as Shipped
+        </MenuItem>
+        <MenuItem onClick={() => handleStatusUpdate(selectedOrder?._id, "Delivered")}>
+          <Chip label="Delivered" size="small" sx={{ mr: 1, bgcolor: "#e8f5e9", color: "#2e7d32" }} />
+          Mark as Delivered
+        </MenuItem>
+      </Menu>
+
+      {/* Status Update Menu for Appointments */}
+      <Menu
+        anchorEl={appointmentAnchorEl}
+        open={Boolean(appointmentAnchorEl)}
+        onClose={handleAppointmentMenuClose}
+      >
+        <MenuItem onClick={() => handleAppointmentStatusUpdate(selectedAppointment?._id, "Confirmed")}>
+          <Chip label="Confirmed" size="small" sx={{ mr: 1, bgcolor: "#e8f5e9", color: "#2e7d32" }} />
+          Accept Appointment
+        </MenuItem>
+        <MenuItem onClick={() => handleAppointmentStatusUpdate(selectedAppointment?._id, "Cancelled")}>
+          <Chip label="Cancelled" size="small" sx={{ mr: 1, bgcolor: "#ffebee", color: "#c62828" }} />
+          Reject Appointment
+        </MenuItem>
+      </Menu>
     </Box>
   );
 };

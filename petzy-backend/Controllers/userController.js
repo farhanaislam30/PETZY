@@ -59,7 +59,7 @@ export async function loginUser(req, res) {
 
 export const updateUserByEmail = async (req, res) => {
   const { email } = req.params;
-  const { name: newName, email: newEmail } = req.body;
+  const { name: newName, email: newEmail, phone, address } = req.body;
 
   const user = await User.findOne({ email });
   console.log(user);
@@ -76,9 +76,28 @@ export const updateUserByEmail = async (req, res) => {
 
   user.email = newEmail;
   user.name = newName;
+  
+  // Update phone and address if provided
+  if (phone !== undefined) {
+    user.phone = phone;
+  }
+  if (address !== undefined) {
+    user.address = address;
+  }
+  
   user.save();
 
-  return res.status(200).json({ message: "User updated successfully" });
+  return res.status(200).json({ 
+    message: "User updated successfully",
+    user: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      address: user.address,
+      role: user.role
+    }
+  });
 };
 
 export const deleteUser = async (req, res) => {

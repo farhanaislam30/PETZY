@@ -7,6 +7,8 @@ import petRoutes from "./routes/petRoutes.js";
 import petManageRoutes from "./routes/petManageRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import customerRoute from "./routes/customerRoute.js";
+import orderRoutes from "./routes/orderRoutes.js";
+import appointmentRoutes from "./routes/appointmentRoutes.js";
 // import chatRoutes from "./routes/chatRoutes.js";
 import doctorRoutes from "./routes/doctorRoutes.js";
 // import geminiRoutes from "./routes/geminiRoutes.js";
@@ -64,6 +66,8 @@ app.use(cors());
   app.use("/api/products", productRoutes);
   
   app.use("/customer", customerRoute);
+  app.use("/api/orders", orderRoutes);
+  app.use("/api/appointments", appointmentRoutes);
   app.use('/', airoute);
 
   app.use("/doctors", doctorRoutes);

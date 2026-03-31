@@ -55,14 +55,20 @@ const AdminRoute = ({ children }) => {
   const token = localStorage.getItem("token");
   const userRole = localStorage.getItem("userRole");
   
+  console.log('[AdminRoute Debug] Token exists:', !!token);
+  console.log('[AdminRoute Debug] userRole from localStorage:', userRole);
+  
   if (!token) {
+    console.log('[AdminRoute Debug] No token - redirecting to login');
     return <Navigate to="/login" replace />;
   }
   
   // Check role from token if not in localStorage
   if (userRole !== 'admin') {
     const decoded = decodeJWT(token);
+    console.log('[AdminRoute Debug] Decoded JWT role:', decoded?.role);
     if (!decoded || decoded.role !== 'admin') {
+      console.log('[AdminRoute Debug] Not admin - showing access denied');
       return (
         <div style={{ 
           display: 'flex', 
@@ -89,6 +95,7 @@ const AdminRoute = ({ children }) => {
     }
   }
   
+  console.log('[AdminRoute Debug] Admin access granted - rendering children');
   return children;
 };
 
