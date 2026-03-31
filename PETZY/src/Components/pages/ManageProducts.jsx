@@ -271,7 +271,7 @@ const ManageProducts = () => {
                         color: theme.secondary,
                       }}
                     >
-                      ${product.price}
+                      ৳{product.price}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Stock: {product.stock}

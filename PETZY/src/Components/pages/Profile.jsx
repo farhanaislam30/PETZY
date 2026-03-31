@@ -333,7 +333,7 @@ const Profile = () => {
                           <TableCell>{order._id?.slice(-8) || "N/A"}</TableCell>
                           <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
                           <TableCell>{order.items?.length || "N/A"}</TableCell>
-                          <TableCell>${order.total || 0}</TableCell>
+                          <TableCell>৳{order.total || 0}</TableCell>
                           <TableCell>
                             <Typography
                               variant="body2"

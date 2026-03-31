@@ -32,6 +32,9 @@ const petSchema = new Schema({
     enum: ['available', 'adopted'],
     default: 'available'
   },
+  address: {
+    type: String,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

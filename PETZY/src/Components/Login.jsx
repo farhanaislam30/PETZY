@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import * as Yup from "yup";
 import {
   Button,
@@ -10,15 +10,22 @@ import {
   Typography,
   InputAdornment,
   IconButton,
-  Link,
-  Checkbox,
-  FormControlLabel,
+  Box,
+  Divider,
+  Alert,
 } from "@mui/material";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import {
+  Visibility,
+  VisibilityOff,
+  Email as EmailIcon,
+  Lock as LockIcon,
+  Pets as PetsIcon,
+} from "@mui/icons-material";
 import axios from "axios";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const togglePasswordVisibility = () => {
@@ -26,118 +33,219 @@ const Login = () => {
   };
 
   const validationSchema = Yup.object({
-    email: Yup.string().email("Invalid email").required("Required"),
-    password: Yup.string().min(6, "Too short").required("Required"),
+    email: Yup.string()
+      .email("Invalid email address")
+      .required("Email is required"),
+    password: Yup.string()
+      .min(6, "Password must be at least 6 characters")
+      .required("Password is required"),
   });
 
   const styles = {
-    heading: {
-      fontSize: "2rem",
-      fontWeight: "600",
-      color: "#333",
-      marginBottom: "1rem",
+    pageBackground: {
+      minHeight: "100vh",
+      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "20px",
     },
     paper: {
-      padding: "2rem",
-      margin: "100px auto",
-      borderRadius: "1rem",
-      boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-      backgroundColor: "#f9f9f9",
+      padding: "3rem",
+      borderRadius: "1.5rem",
+      boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
+      backgroundColor: "rgba(255, 255, 255, 0.98)",
+      maxWidth: "450px",
+      width: "100%",
+    },
+    logoContainer: {
+      textAlign: "center",
+      marginBottom: "1.5rem",
+    },
+    logo: {
+      width: "80px",
+      height: "80px",
+      borderRadius: "50%",
+      objectFit: "cover",
+    },
+    heading: {
+      fontSize: "1.75rem",
+      fontWeight: "700",
+      color: "#333",
+      marginBottom: "0.5rem",
       textAlign: "center",
     },
-    input: { marginTop: "1.5rem" },
-    button: {
-      marginTop: "2rem",
-      fontSize: "1.2rem",
-      fontWeight: "700",
-      backgroundColor: "#1976d2",
-      color: "#fff",
-      borderRadius: "0.5rem",
-      padding: "0.8rem 0",
+    subheading: {
+      fontSize: "0.95rem",
+      color: "#666",
+      marginBottom: "2rem",
+      textAlign: "center",
     },
-    linkText: { marginTop: "1.5rem", fontSize: "1rem" },
+    input: {
+      marginBottom: "1.25rem",
+      "& .MuiOutlinedInput-root": {
+        borderRadius: "0.75rem",
+        backgroundColor: "#f8f9fa",
+        "&:hover .MuiOutlinedInput-notchedOutline": {
+          borderColor: "#667eea",
+        },
+        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+          borderColor: "#667eea",
+        },
+      },
+    },
+    button: {
+      marginTop: "1rem",
+      fontSize: "1.1rem",
+      fontWeight: "600",
+      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      color: "#fff",
+      borderRadius: "0.75rem",
+      padding: "0.9rem 0",
+      textTransform: "none",
+      transition: "transform 0.2s, box-shadow 0.2s",
+      "&:hover": {
+        transform: "translateY(-2px)",
+        boxShadow: "0 8px 25px rgba(102, 126, 234, 0.4)",
+      },
+    },
+    registerBox: {
+      marginTop: "2rem",
+      padding: "1.5rem",
+      backgroundColor: "#f8f9fa",
+      borderRadius: "1rem",
+      textAlign: "center",
+    },
+    registerText: {
+      color: "#666",
+      fontSize: "0.95rem",
+    },
+    registerLink: {
+      color: "#667eea",
+      fontWeight: "600",
+      textDecoration: "none",
+      "&:hover": {
+        textDecoration: "underline",
+      },
+    },
+    divider: {
+      margin: "1.5rem 0",
+    },
+    forgotPassword: {
+      textAlign: "center",
+      marginTop: "1rem",
+      "& a": {
+        color: "#667eea",
+        textDecoration: "none",
+        fontSize: "0.9rem",
+        "&:hover": {
+          textDecoration: "underline",
+        },
+      },
+    },
   };
+
   async function login(data, setSubmitting) {
     console.log("Login request data:", data);
+    setError("");
 
-    await axios
-      .put("http://localhost:3000/users", data)
-      .then(function (res) {
-        console.log("DEBUG Frontend - Full response:", res.data);
-        console.log("DEBUG Frontend - role in response:", res.data.role);
-        
-        localStorage.setItem("token", res.data.token);
-        localStorage.setItem("refreshToken", res.data.refreshToken);
-        
-        // Store user role from response
-        if (res.data.role) {
-          console.log("DEBUG Frontend - Storing role:", res.data.role);
-          localStorage.setItem("userRole", res.data.role);
-        } else {
-          console.warn("DEBUG Frontend - role NOT found in response!");
-        }
-        
-        // Decode token to get user info and store it
-        try {
-          const base64Url = res.data.token.split('.')[1];
-          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-          const jsonPayload = decodeURIComponent(
-            atob(base64)
-              .split('')
-              .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-              .join('')
-          );
-          const decoded = JSON.parse(jsonPayload);
-          
-          // Store user name
-          if (decoded.name) {
-            localStorage.setItem("userName", decoded.name);
-          }
-          // Store role from decoded token if not in response
-          if (!res.data.role && decoded.role) {
-            localStorage.setItem("userRole", decoded.role);
-          }
-        } catch (err) {
-          console.error("Error decoding token:", err);
-        }
+    try {
+      const response = await axios.put("http://localhost:3000/users", data);
+      console.log("DEBUG Frontend - Full response:", response.data);
+      console.log("DEBUG Frontend - role in response:", response.data.role);
 
-        // Redirect admin users to admin panel, others to home
-        if (res.data.role === 'admin') {
-          navigate("/admin");
-        } else {
-          navigate("/");
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("refreshToken", response.data.refreshToken);
+
+      // Store user role from response
+      if (response.data.role) {
+        console.log("DEBUG Frontend - Storing role:", response.data.role);
+        localStorage.setItem("userRole", response.data.role);
+      } else {
+        console.warn("DEBUG Frontend - role NOT found in response!");
+      }
+
+      // Decode token to get user info and store it
+      try {
+        const base64Url = response.data.token.split(".")[1];
+        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split("")
+            .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+            .join("")
+        );
+        const decoded = JSON.parse(jsonPayload);
+
+        // Store user name
+        if (decoded.name) {
+          localStorage.setItem("userName", decoded.name);
         }
-        
-        console.log(res.data);
-        console.log("Login success!");
-      })
-      .catch(function (err) {
-        console.log(err);
-      });
+        // Store role from decoded token if not in response
+        if (!response.data.role && decoded.role) {
+          localStorage.setItem("userRole", decoded.role);
+        }
+      } catch (err) {
+        console.error("Error decoding token:", err);
+      }
+
+      // Redirect admin users to admin panel, others to home
+      if (response.data.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
+
+      console.log(response.data);
+      console.log("Login success!");
+    } catch (err) {
+      console.log(err);
+      setError(
+        err.response?.data?.message ||
+          "Invalid email or password. Please try again."
+      );
+    }
 
     setSubmitting(false);
   }
 
   return (
-    <Grid container justifyContent="center">
+    <Box style={styles.pageBackground}>
       <Paper
         style={styles.paper}
         sx={{
-          width: { xs: "90vw", sm: "60vw", md: "40vw", lg: "30vw", xl: "25vw" },
+          width: { xs: "95%", sm: "90%", md: "40vw", lg: "30vw" },
           maxWidth: "450px",
         }}
       >
-        <Typography style={styles.heading}>Login to Your Account</Typography>
+        <Box style={styles.logoContainer}>
+          <img
+            src="/logo.png"
+            alt="Petzy Logo"
+            style={styles.logo}
+          />
+        </Box>
+
+        <Typography style={styles.heading}>Welcome Back! 🐾</Typography>
+        <Typography style={styles.subheading}>
+          Sign in to continue your pet care journey
+        </Typography>
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 2, borderRadius: "0.75rem" }}>
+            {error}
+          </Alert>
+        )}
+
         <Formik
-          initialValues={{ email: "", password: "", remember: false }}
+          initialValues={{ email: "", password: "" }}
           validationSchema={validationSchema}
           onSubmit={(values, { setSubmitting }) => {
             login(values, setSubmitting);
             console.log(values);
-            setSubmitting(false);
           }}
         >
-          {({ isSubmitting, handleChange, values }) => (
+          {({ isSubmitting, values }) => (
             <Form>
               <Field
                 as={TextField}
@@ -147,9 +255,15 @@ const Login = () => {
                 name="email"
                 variant="outlined"
                 fullWidth
-                error={!!values.email && values.email.length > 0}
-                helperText={<ErrorMessage name="email" />}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <EmailIcon sx={{ color: "#667eea" }} />
+                    </InputAdornment>
+                  ),
+                }}
               />
+
               <Field
                 as={TextField}
                 style={styles.input}
@@ -158,9 +272,12 @@ const Login = () => {
                 name="password"
                 variant="outlined"
                 fullWidth
-                error={!!values.password && values.password.length > 0}
-                helperText={<ErrorMessage name="password" />}
                 InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LockIcon sx={{ color: "#667eea" }} />
+                    </InputAdornment>
+                  ),
                   endAdornment: (
                     <InputAdornment position="end">
                       <IconButton
@@ -168,48 +285,48 @@ const Login = () => {
                         edge="end"
                         aria-label="toggle password visibility"
                       >
-                        {showPassword ? <Visibility /> : <VisibilityOff />}
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
                     </InputAdornment>
                   ),
                 }}
               />
-              <FormControlLabel
-                control={
-                  <Field
-                    as={Checkbox}
-                    type="checkbox"
-                    name="remember"
-                    color="primary"
-                  />
-                }
-                label="Remember me"
-              />
+
               <Button
                 type="submit"
                 variant="contained"
                 style={styles.button}
                 fullWidth
                 disabled={isSubmitting}
+                startIcon={<PetsIcon />}
               >
-                Login
+                {isSubmitting ? "Signing in..." : "Sign In"}
               </Button>
-              <Typography style={styles.linkText}>
-                <Link href="/forgot-password" underline="hover">
-                  Forgot Password?
-                </Link>
-              </Typography>
-              <Typography style={styles.linkText}>
-                Don't have an account?{" "}
-                <Link href="/register" underline="hover">
-                  Create one here
-                </Link>
-              </Typography>
+
+              <Box style={styles.forgotPassword}>
+                <Link to="/forgot-password">Forgot Password?</Link>
+              </Box>
             </Form>
           )}
         </Formik>
+
+        <Divider style={styles.divider}>OR</Divider>
+
+        <Box style={styles.registerBox}>
+          <Typography style={styles.registerText}>
+            Don't have an account?{" "}
+            <Link to="/register" style={styles.registerLink}>
+              Create one here
+            </Link>
+          </Typography>
+          <Typography
+            sx={{ mt: 1, fontSize: "0.85rem", color: "#888" }}
+          >
+            Join our community of pet lovers today!
+          </Typography>
+        </Box>
       </Paper>
-    </Grid>
+    </Box>
   );
 };
 

@@ -101,7 +101,7 @@ const ManagePets = () => {
       type: pet.type || "",
       age: pet.age || "",
       image: pet.image || "",
-      location: pet.location || "",
+      address: pet.address || "",
       description: pet.description || "",
       price: pet.price || "",
     });
@@ -238,7 +238,7 @@ const ManagePets = () => {
                         whiteSpace: "nowrap"
                       }}
                     >
-                      ${pet.price}
+                      ৳{pet.price}
                     </Typography>
                   </Box>
                   
@@ -247,7 +247,7 @@ const ManagePets = () => {
                   </Typography>
                   
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    📍 {pet.location}
+                    📍 {pet.address}
                   </Typography>
                   
                   <Divider sx={{ my: 1.5 }} />

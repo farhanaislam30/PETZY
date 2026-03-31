@@ -105,7 +105,7 @@ const AdminPanel = () => {
         <Grid item xs={12} sm={4}>
           <Paper sx={{ p: 2.5, borderRadius: 2, textAlign: "center" }}>
             <Typography variant="h3" sx={{ fontWeight: 700, color: theme.success }}>
-              ${orders.reduce((acc, order) => acc + (parseFloat(order.total) || 0), 0).toFixed(2)}
+              ৳{orders.reduce((acc, order) => acc + (parseFloat(order.total) || 0), 0).toFixed(2)}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Total Revenue
@@ -211,7 +211,7 @@ const AdminPanel = () => {
                     </TableCell>
                     <TableCell align="right">
                       <Typography variant="body2" sx={{ fontWeight: 600, color: theme.secondary }}>
-                        ${order.total}
+                        ৳{order.total}
                       </Typography>
                     </TableCell>
                     <TableCell>

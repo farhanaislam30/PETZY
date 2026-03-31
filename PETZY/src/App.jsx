@@ -20,6 +20,8 @@ import ManagePets from "./Components/pages/ManagePets";
 import ManageProducts from "./Components/pages/ManageProducts";
 import ManageDoctors from "./Components/pages/ManageDoctors";
 import Profile from "./Components/pages/Profile";
+import Footer from "./Components/pages/Footer";
+import FAQ from "./Components/pages/FAQ";
 
 // Helper function to decode JWT token
 const decodeJWT = (token) => {
@@ -104,6 +106,7 @@ function App() {
           <Route path="/donation" element={<Donation />}></Route>
           <Route path="/donate" element={<Donatepage />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/faq" element={<FAQ />} />
           <Route path="/services" element={<Services />}></Route>
           <Route path="/cart" element={<Cart />} />
           <Route path="/logout" element={<Logout />} />
@@ -156,6 +159,7 @@ function App() {
             } 
           />
         </Routes>
+        <Footer></Footer>
       </BrowserRouter>
     </>
   );

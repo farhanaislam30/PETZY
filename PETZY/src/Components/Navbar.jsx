@@ -91,6 +91,13 @@ const Navbar = () => {
 
   const isAdmin = userRole === 'admin';
 
+  // DEBUG: Log state for debugging
+  console.log('[DEBUG Navbar] isAuthenticated:', isAuthenticated);
+  console.log('[DEBUG Navbar] userRole:', userRole);
+  console.log('[DEBUG Navbar] isAdmin:', isAdmin);
+  console.log('[DEBUG Navbar] localStorage token:', !!localStorage.getItem('token'));
+  console.log('[DEBUG Navbar] localStorage userRole:', localStorage.getItem('userRole'));
+
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
       <div className="container">
@@ -174,27 +181,6 @@ const Navbar = () => {
                   </NavLink>
                 </li>
 
-                {/* Services - Only visible to regular users */}
-                <li className="nav-item">
-                  <NavLink to="/services" className="nav-link">
-                    <FaClinicMedical className="me-1" /> Services
-                  </NavLink>
-                </li>
-
-                {/* Contact - Only visible to regular users */}
-                <li className="nav-item">
-                  <NavLink to="/contact" className="nav-link">
-                    <FaEnvelope className="me-1" /> Contact
-                  </NavLink>
-                </li>
-
-                {/* Donations - Only visible to regular users */}
-                <li className="nav-item">
-                  <NavLink to="/donation" className="nav-link">
-                    <FaHandsHelping className="me-1" /> Donations
-                  </NavLink>
-                </li>
-
                 {/* Cart - Only visible to regular users */}
                 <li className="nav-item">
                   <NavLink to="/cart" className="nav-link">
@@ -234,19 +220,13 @@ const Navbar = () => {
                 </button>
               </>
             ) : (
-              // Show Login and Register when NOT logged in
+              // Show Login only when NOT logged in
               <>
                 <NavLink
                   to="/login"
                   className="btn btn-outline-primary me-2 mb-2 mb-lg-0"
                 >
                   <FaSignInAlt className="me-1" /> Login
-                </NavLink>
-                <NavLink
-                  to="/register"
-                  className="btn btn-outline-primary me-2 mb-2 mb-lg-0"
-                >
-                  <FaUserPlus className="me-1" /> Register
                 </NavLink>
               </>
             )}
