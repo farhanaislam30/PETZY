@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import {
   Dialog,
@@ -26,6 +26,24 @@ import {
 } from "@mui/icons-material";
 
 const ShowInterestForm = ({ pet, onClose, onInterestSubmitted }) => {
+  // Helper function to decode JWT token
+  const decodeJWT = (token) => {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      return JSON.parse(jsonPayload);
+    } catch (error) {
+      console.error("Error decoding JWT:", error);
+      return null;
+    }
+  };
+
   const [formData, setFormData] = useState({
     email: "",
     phone: "",
@@ -36,6 +54,21 @@ const ShowInterestForm = ({ pet, onClose, onInterestSubmitted }) => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
+
+  // Auto-fill email and phone from JWT token
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const decoded = decodeJWT(token);
+      if (decoded) {
+        setFormData((prev) => ({
+          ...prev,
+          email: decoded.email || "",
+          phone: decoded.phone || "",
+        }));
+      }
+    }
+  }, []);
 
   const validateForm = () => {
     const newErrors = {};
