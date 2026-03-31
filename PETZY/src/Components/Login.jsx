@@ -58,15 +58,56 @@ const Login = () => {
     linkText: { marginTop: "1.5rem", fontSize: "1rem" },
   };
   async function login(data, setSubmitting) {
-    console.log(data);
+    console.log("Login request data:", data);
 
     await axios
       .put("http://localhost:3000/users", data)
       .then(function (res) {
+        console.log("DEBUG Frontend - Full response:", res.data);
+        console.log("DEBUG Frontend - role in response:", res.data.role);
+        
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("refreshToken", res.data.refreshToken);
+        
+        // Store user role from response
+        if (res.data.role) {
+          console.log("DEBUG Frontend - Storing role:", res.data.role);
+          localStorage.setItem("userRole", res.data.role);
+        } else {
+          console.warn("DEBUG Frontend - role NOT found in response!");
+        }
+        
+        // Decode token to get user info and store it
+        try {
+          const base64Url = res.data.token.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const jsonPayload = decodeURIComponent(
+            atob(base64)
+              .split('')
+              .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+              .join('')
+          );
+          const decoded = JSON.parse(jsonPayload);
+          
+          // Store user name
+          if (decoded.name) {
+            localStorage.setItem("userName", decoded.name);
+          }
+          // Store role from decoded token if not in response
+          if (!res.data.role && decoded.role) {
+            localStorage.setItem("userRole", decoded.role);
+          }
+        } catch (err) {
+          console.error("Error decoding token:", err);
+        }
 
-        navigate("/");
+        // Redirect admin users to admin panel, others to home
+        if (res.data.role === 'admin') {
+          navigate("/admin");
+        } else {
+          navigate("/");
+        }
+        
         console.log(res.data);
         console.log("Login success!");
       })

@@ -40,17 +40,17 @@ export async function loginUser(req, res) {
     const user = await loginUser_DB(email, password);
 
     const uid = user._id.toString();
-    console.log("userId", uid);
 
-    const token = generateToken(uid);
-    const rtoken = generateRefreshToken(uid);
+    // Pass full user object to generate tokens with role
+    const token = generateToken(user);
+    const rtoken = generateRefreshToken(user);
 
     const rUser = {
       ...user,
       token: token,
       refreshToken: rtoken,
     };
-
+    
     res.json(rUser);
   } catch (error) {
     res.status(401).json({ message: "Invalid credentials" });

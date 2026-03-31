@@ -3,15 +3,23 @@
 }
 
 .navbar-nav .nav-link {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 500;
-  color: black;
-  transition: color 0.3s;
+  color: #333;
+  transition: all 0.3s ease;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  margin: 0 2px;
 }
 
 .navbar-nav .nav-link:hover,
 .navbar-nav .nav-link.active {
   color: cornflowerblue;
+  background-color: rgba(100, 149, 237, 0.1);
+}
+
+.navbar {
+  border-bottom: 2px solid rgba(100, 149, 237, 0.2);
 }
 
 .btn-warning {
@@ -21,4 +29,53 @@
 
 .btn-warning:hover {
   background-color: cornflowerblue;
+}
+
+/* User name badge styling */
+.user-name-badge {
+  font-size: 0.9rem;
+  font-weight: 500;
+  background-color: #f8f9fa;
+  border-color: #dee2e6;
+  cursor: default;
+}
+
+/* Navbar button hover effects */
+.navbar .btn {
+  transition: all 0.3s ease;
+}
+
+.navbar .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Toggler button styling */
+.navbar-toggler {
+  border: none;
+  padding: 0.5rem;
+}
+
+.navbar-toggler:focus {
+  box-shadow: none;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 991px) {
+  .navbar-nav .nav-link {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin: 2px 0;
+  }
+  
+  .navbar-nav .nav-link:hover,
+  .navbar-nav .nav-link.active {
+    background-color: rgba(100, 149, 237, 0.15);
+  }
+  
+  .navbar-collapse {
+    padding: 1rem 0;
+    background-color: white;
+    border-radius: 0 0 10px 10px;
+  }
 }

@@ -8,16 +8,13 @@ async function loginUser_DB(email, password) {
     let existing = await user.findOne({ email });
 
     if (existing) {
-      const match = bcrypt.compare(password, existing.password);
+      const match = await bcrypt.compare(password, existing.password);
 
       if (match) {
-        //const token = generateToken(existing);
         existing = existing._doc;
         existing["password"] = "";
 
         const rUser = { ...existing };
-
-        console.log("rUser", rUser);
         return rUser;
       } else {
         throw new Error("Password does not match");

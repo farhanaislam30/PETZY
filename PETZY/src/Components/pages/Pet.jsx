@@ -10,7 +10,7 @@ const petsData = [
     age: "2 weeks",
     location: "Dhanmondi,Dhaka",
     time: "about 1 hour ago",
-    image: "./cat1.jpg",
+    image: "/cat1.jpg",
   },
   {
     id: 2,
@@ -19,7 +19,7 @@ const petsData = [
     age: "2 years",
     location: "Tejgaon, Dhaka",
     time: "5 hours ago",
-    image: "./dog1.jpg",
+    image: "/dog1.jpg",
   },
   {
     id: 3,
@@ -28,7 +28,7 @@ const petsData = [
     age: "2 months",
     location: "Mirpur 10, Dhaka",
     time: "11 hours ago",
-    image: "./dog2.jpg",
+    image: "/dog2.jpg",
   },
   {
     id: 4,
@@ -37,7 +37,7 @@ const petsData = [
     age: "1 year",
     location: "Lalmatia, Dhaka",
     time: "19 hours ago",
-    image: "./cat2.jpg",
+    image: "/cat2.jpg",
   },
   {
     id: 5,
@@ -46,7 +46,7 @@ const petsData = [
     age: "1 year",
     location: "Naogaon, Rajshahi",
     time: "1 day ago",
-    image: "./rabbit1.jpg",
+    image: "/rabbit1.jpg",
   },
   {
     id: 6,
@@ -55,7 +55,7 @@ const petsData = [
     age: "1.5 years",
     location: "Srimangal, Sylhet",
     time: "1 day ago",
-    image: "./rabbit2.jpg",
+    image: "/rabbit2.jpg",
   },
   {
     id: 7,
@@ -64,7 +64,7 @@ const petsData = [
     age: "6 months",
     location: "Uttora, Dhaka",
     time: "1 day ago",
-    image: "./fish.jpg",
+    image: "/fish.jpg",
   },
   {
     id: 8,
@@ -73,7 +73,7 @@ const petsData = [
     age: "1 year",
     location: "Bandarban, CTG",
     time: "1 day ago",
-    image: "./bird1.jpg",
+    image: "/bird1.jpg",
   },
   {
     id: 9,
@@ -82,7 +82,7 @@ const petsData = [
     age: "8 months",
     location: "Gazipur, Dhaka",
     time: "2 days ago",
-    image: "./bird2.jpg",
+    image: "/bird2.jpg",
   },
   {
     id: 10,
@@ -91,7 +91,7 @@ const petsData = [
     age: "1.5 years",
     location: "Sitakundo, CTG",
     time: "2 days ago",
-    image: "./other1ginipig.jpg",
+    image: "/other1ginipig.jpg",
   },
   {
     id: 11,
@@ -100,7 +100,7 @@ const petsData = [
     age: "2 months",
     location: "Uttora, Dhaka",
     time: "2 days ago",
-    image: "./cat3.jpg",
+    image: "/cat3.jpg",
   },
   {
     id: 12,
@@ -109,7 +109,7 @@ const petsData = [
     age: "11 months",
     location: "Mirpur 10, Dhaka",
     time: "2 days ago",
-    image: "./dog4.jpg",
+    image: "/dog4.jpg",
   },
   {
     id: 13,
@@ -118,7 +118,7 @@ const petsData = [
     age: "2 years",
     location: "Banasree, Dhaka",
     time: "3 days ago",
-    image: "./cat4.jpg",
+    image: "/cat4.jpg",
   },
 ];
 

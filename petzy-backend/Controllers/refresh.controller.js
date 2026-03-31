@@ -5,7 +5,7 @@ export async function refreshAllTokens(req, res) {
   try {
     const { refreshToken } = req.body;
 
-    if (!refreshToken) res.status(400);
+    if (!refreshToken) return res.status(400).json({ message: "Invalid refresh token" });
 
     const userIdObj = verifyRefreshToken(refreshToken);
     const uid = userIdObj.toString();

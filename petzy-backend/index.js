@@ -1,9 +1,11 @@
 import express from "express";
 import userRouter from "./routes/userRoutes.js";
-import refreshTokentroute from "./routes/refreshToken.route.js";
+import refreshTokenRoute from "./routes/refreshToken.route.js";
 import donatecreate from "./routes/donatecreate.route.js";
 import donateget from "./routes/donateget.route.js";
 import petRoutes from "./routes/petRoutes.js";
+import petManageRoutes from "./routes/petManageRoutes.js";
+import productRoutes from "./routes/productRoutes.js";
 import customerRoute from "./routes/customerRoute.js";
 // import chatRoutes from "./routes/chatRoutes.js";
 import doctorRoutes from "./routes/doctorRoutes.js";
@@ -50,7 +52,7 @@ app.use(cors());
   app.use("/users", userRouter);
 
   
-  app.use("/refresh_tokens", refreshTokentroute);
+  app.use("/refresh_tokens", refreshTokenRoute);
   
   app.use("/donates", donatecreate);
   
@@ -58,16 +60,19 @@ app.use(cors());
   
   app.use("/show-interest", petRoutes);
   
-app.use("/customer", customerRoute);
-app.use('/', airoute);
+  app.use("/api/pets", petManageRoutes);
+  app.use("/api/products", productRoutes);
+  
+  app.use("/customer", customerRoute);
+  app.use('/', airoute);
 
-app.use("/doctors", doctorRoutes);
+  app.use("/doctors", doctorRoutes);
 
-// app.use("/chat", chatRoutes);
+  // app.use("/chat", chatRoutes);
 
-// app.use("/gemini", geminiRoutes);
-// app.post("/chat", askGemini);
+  // app.use("/gemini", geminiRoutes);
+  // app.post("/chat", askGemini);
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });

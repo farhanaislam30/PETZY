@@ -48,7 +48,7 @@ const Home = () => {
 
             <div className="col-md-6 text-center">
               <img
-                src="homepet.png"
+                src="/homepet.png"
                 alt="Dog"
                 className="img-fluid"
                 style={{ maxWidth: "70%", maxHeight: "500px" }}

@@ -3,22 +3,32 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-export function generateToken(userId) {
-  const payload = {};
+export function generateToken(user) {
+  // Include user role in the token payload
+  const payload = {
+    _id: user._id,
+    email: user.email,
+    role: user.role,
+    name: user.name
+  };
 
   const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
     expiresIn: "1h",
-    audience: userId,
   });
   return accessToken;
 }
 
-export function generateRefreshToken(userId) {
-  const payload = {};
+export function generateRefreshToken(user) {
+  // Include user role in refresh token as well
+  const payload = {
+    _id: user._id,
+    email: user.email,
+    role: user.role,
+    name: user.name
+  };
 
-  const accessToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
+  const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
     expiresIn: "1y",
-    audience: userId,
   });
-  return accessToken;
+  return refreshToken;
 }

@@ -84,7 +84,7 @@ const Register = () => {
       >
         <Typography style={styles.heading}>Create Your Account</Typography>
         <Formik
-          initialValues={{ fullName: "", email: "", password: "" }}
+          initialValues={{ fullName: "", email: "", password: "", adminCode: "" }}
           validationSchema={validationSchema}
           onSubmit={(values, { setSubmitting }) => {
             register(values, setSubmitting);
@@ -132,6 +132,15 @@ const Register = () => {
                     </InputAdornment>
                   ),
                 }}
+              />
+              <Field
+                as={TextField}
+                style={styles.input}
+                label="Admin Code (Optional)"
+                name="adminCode"
+                variant="outlined"
+                fullWidth
+                helperText={<ErrorMessage name="adminCode" />}
               />
               <Button
                 type="submit"

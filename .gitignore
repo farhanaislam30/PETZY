@@ -1,0 +1,149 @@
+# =============================================================================
+# GLOBAL PETZY PROJECT .GITIGNORE
+# Covers both frontend (PETZY) and backend (petzy-backend) projects
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# NODE MODULES & DEPENDENCIES
+# -----------------------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# -----------------------------------------------------------------------------
+# ENVIRONMENT VARIABLES (.env files)
+# -----------------------------------------------------------------------------
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+.env.*
+!.env.example
+
+# -----------------------------------------------------------------------------
+# BUILD OUTPUTS & DIST FOLDERS
+# -----------------------------------------------------------------------------
+dist/
+dist-ssr/
+build/
+out/
+*.local
+
+# -----------------------------------------------------------------------------
+# IDE FILES
+# -----------------------------------------------------------------------------
+# VSCode
+.vscode/*
+!.vscode/extensions.json
+.vscode/
+
+# JetBrains IDEs (WebStorm, IDEA, etc.)
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Other IDEs
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# -----------------------------------------------------------------------------
+# OS FILES
+# -----------------------------------------------------------------------------
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+Icon?
+ehthumbs.db
+Desktop.ini
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# -----------------------------------------------------------------------------
+# LOG FILES
+# -----------------------------------------------------------------------------
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pm2.log
+pm2-debug.log
+forever.log
+
+# -----------------------------------------------------------------------------
+# CACHE FILES
+# -----------------------------------------------------------------------------
+.cache/
+.Parrot-Cache/
+*.cache
+*.tsbuildinfo
+.next/
+.nuxt/
+.vuepress/dist
+.svelte-kit/
+
+# -----------------------------------------------------------------------------
+# TEST & COVERAGE
+# -----------------------------------------------------------------------------
+coverage/
+.nyc_output/
+coverage/
+*.cov
+
+# -----------------------------------------------------------------------------
+# TEMP FILES
+# -----------------------------------------------------------------------------
+*.tmp
+*.temp
+*.bak
+*.orig
+*~
+
+# -----------------------------------------------------------------------------
+# BACKEND SPECIFIC
+# -----------------------------------------------------------------------------
+# Backend data files (should be regenerated, not committed)
+petzy-backend/data.json
+petzy-backend/data.js
+
+# Uploaded files (if any)
+uploads/
+*.upload
+
+# -----------------------------------------------------------------------------
+# FRONTEND SPECIFIC
+# -----------------------------------------------------------------------------
+# Vite/React build
+PETZY/dist/
+PETZY/.vite/
+
+# -----------------------------------------------------------------------------
+# SECRETS & KEYS (Explicitly untrack these)
+# -----------------------------------------------------------------------------
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx

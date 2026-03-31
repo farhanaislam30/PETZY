@@ -47,7 +47,7 @@ export function verifyRefreshToken(refreshToken) {
     (err, payload) => {
       if (err) {
         console.log("err: ", err);
-        return res.error(403);
+        return null;
       }
 
       const userId = payload.aud;
