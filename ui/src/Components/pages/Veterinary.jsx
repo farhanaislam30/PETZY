@@ -94,6 +94,14 @@ const Veterinary = () => {
   }, []);
 
   const handleBookAppointment = (doctor) => {
+    // Check if user is logged in BEFORE opening the booking dialog
+    const isLoggedIn = localStorage.getItem("token") || localStorage.getItem("user");
+    if (!isLoggedIn) {
+      alert("Please login first");
+      window.location.href = "/login";
+      return;
+    }
+
     setSelectedDoctor(doctor);
     setBookingOpen(true);
     setBookingSuccess(false);

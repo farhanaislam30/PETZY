@@ -30,6 +30,14 @@ const Pet = () => {
   }, []);
 
   const handleShowInterest = (pet) => {
+    // Check if user is logged in BEFORE opening the form
+    const isLoggedIn = localStorage.getItem("token") || localStorage.getItem("user");
+    if (!isLoggedIn) {
+      alert("Please login first");
+      window.location.href = "/login";
+      return;
+    }
+    
     setSelectedPet(pet);
     setShowModal(true);
   };

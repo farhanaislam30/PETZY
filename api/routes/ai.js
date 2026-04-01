@@ -1,7 +1,8 @@
 import express from 'express'
 const airoute = express.Router()
-import { GenAi } from '../controllers/aicontroller.js'
+import { GenAi, aiRateLimiter } from '../controllers/aicontroller.js'
 
-airoute.post('/aicall', GenAi)
+// Apply rate limiter to the AI route - 10 requests per minute
+airoute.post('/aicall', aiRateLimiter, GenAi)
 
 export default airoute

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import {
   Dialog,
@@ -26,6 +27,8 @@ import {
 } from "@mui/icons-material";
 
 const ShowInterestForm = ({ pet, onClose, onInterestSubmitted }) => {
+  const navigate = useNavigate();
+
   // Helper function to decode JWT token
   const decodeJWT = (token) => {
     try {
@@ -115,6 +118,14 @@ const ShowInterestForm = ({ pet, onClose, onInterestSubmitted }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitStatus(null);
+
+    // Check if user is logged in
+    const isLoggedIn = localStorage.getItem("token") || localStorage.getItem("user");
+    if (!isLoggedIn) {
+      alert("Please login to submit your interest");
+      navigate("/login");
+      return;
+    }
 
     if (!validateForm()) {
       return;

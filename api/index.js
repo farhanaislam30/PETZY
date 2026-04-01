@@ -3,6 +3,7 @@ import userRouter from "./routes/userRoutes.js";
 import refreshTokenRoute from "./routes/refreshToken.route.js";
 import donatecreate from "./routes/donatecreate.route.js";
 import donateget from "./routes/donateget.route.js";
+import donationRoute from "./routes/donation.route.js";
 import petRoutes from "./routes/petRoutes.js";
 import petManageRoutes from "./routes/petManageRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
@@ -59,6 +60,7 @@ app.use(cors());
   app.use("/donates", donatecreate);
   
   app.use("/donateget", donateget);
+  app.use("/donations", donationRoute);
   
   app.use("/show-interest", petRoutes);
   

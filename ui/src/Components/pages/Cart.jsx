@@ -255,6 +255,14 @@ const Cart = () => {
   };
 
   const handleOrderConfirmation = async () => {
+    // Check if user is logged in
+    const isLoggedIn = localStorage.getItem("token") || localStorage.getItem("user");
+    if (!isLoggedIn) {
+      alert("Please login to complete your purchase");
+      navigate("/login");
+      return;
+    }
+
     if (!validateStep(1)) return;
 
     // Debug: Check cart items and grandTotal

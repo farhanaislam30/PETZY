@@ -19,7 +19,10 @@ import {
   Menu,
   MenuItem,
   IconButton,
+  Tabs,
+  Tab,
 } from "@mui/material";
+import { Refresh } from "@mui/icons-material";
 import { ShoppingCart, Person, Email, Phone, LocationOn, CalendarMonth, ConfirmationNumber, MoreVert } from "@mui/icons-material";
 
 const API_BASE = "http://localhost:3000";
@@ -41,9 +44,13 @@ const AdminPanel = () => {
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState([]);
   const [petInterests, setPetInterests] = useState([]);
+  const [donations, setDonations] = useState([]);
+  const [petDonations, setPetDonations] = useState([]);
   const [appointments, setAppointments] = useState([]);
+  const [lastRefresh, setLastRefresh] = useState(new Date());
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [activeTab, setActiveTab] = useState(0);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [appointmentAnchorEl, setAppointmentAnchorEl] = useState(null);
@@ -53,6 +60,8 @@ const AdminPanel = () => {
   useEffect(() => {
     fetchOrders();
     fetchPetInterests();
+    fetchDonations();
+    fetchPetDonations();
     fetchAppointments();
   }, []);
 
@@ -77,6 +86,26 @@ const AdminPanel = () => {
       setPetInterests(response.data || []);
     } catch (err) {
       console.error("Error fetching pet interests:", err);
+    }
+  };
+
+  const fetchDonations = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/donations`);
+      console.log("[AdminPanel] Financial Donations Response:", JSON.stringify(response.data, null, 2));
+      setDonations(response.data.donations || []);
+    } catch (err) {
+      console.error("Error fetching financial donations:", err);
+    }
+  };
+
+  const fetchPetDonations = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/donateget`);
+      console.log("[AdminPanel] Pet Donations Response:", JSON.stringify(response.data, null, 2));
+      setPetDonations(response.data || []);
+    } catch (err) {
+      console.error("Error fetching pet donations:", err);
     }
   };
 
@@ -170,6 +199,8 @@ const AdminPanel = () => {
     setSelectedAppointment(null);
   };
 
+  const tabLabels = ["Orders", "Appointments", "Pet Requests", "Donations", "Posted Pets"];
+
   return (
     <Box sx={{ width: "100%", mt: 8, px: { xs: 1, md: 3 }, py: 3, minHeight: "100vh", bgcolor: theme.background }}>
       {/* Page Header */}
@@ -177,7 +208,7 @@ const AdminPanel = () => {
         elevation={0} 
         sx={{ 
           p: 3, 
-          mb: 3, 
+          mb: 2, 
           borderRadius: 2,
           background: `linear-gradient(135deg, ${theme.primary} 0%, #1565c0 100%)`,
           color: theme.white,
@@ -196,7 +227,7 @@ const AdminPanel = () => {
           </Box>
           <Box>
             <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>
-              View Orders
+              {tabLabels[activeTab]}
             </Typography>
             <Typography variant="body2" sx={{ opacity: 0.9 }}>
               Track and manage customer orders
@@ -205,41 +236,65 @@ const AdminPanel = () => {
         </Box>
       </Paper>
 
-      {/* Stats Summary */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={4}>
-          <Paper sx={{ p: 2.5, borderRadius: 2, textAlign: "center" }}>
-            <Typography variant="h3" sx={{ fontWeight: 700, color: theme.primary }}>
-              {orders.length}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Total Orders
-            </Typography>
-          </Paper>
+      {/* Tabs Navigation */}
+      <Paper sx={{ mb: 2, borderRadius: 2 }}>
+        <Tabs 
+          value={activeTab} 
+          onChange={(e, v) => setActiveTab(v)}
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{ 
+            '& .MuiTab-root': { minHeight: 56, textTransform: 'none', fontWeight: 600 },
+            '& .Mui-selected': { fontWeight: 700 }
+          }}
+        >
+          <Tab label={`Orders (${orders.length})`} />
+          <Tab label={`Appointments (${appointments.length})`} />
+          <Tab label={`Pet Requests (${petInterests.length})`} />
+          <Tab label={`Donations (${donations.length})`} />
+          <Tab label={`Posted Pets (${petDonations.length})`} />
+        </Tabs>
+      </Paper>
+
+      {/* Tab Content */}
+      {activeTab === 0 && (
+        <Grid container spacing={3} sx={{ mb: 3 }}>
+          <Grid item xs={12} sm={4}>
+            <Paper sx={{ p: 2.5, borderRadius: 2, textAlign: "center" }}>
+              <Typography variant="h3" sx={{ fontWeight: 700, color: theme.primary }}>
+                {orders.length}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Total Orders
+              </Typography>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <Paper sx={{ p: 2.5, borderRadius: 2, textAlign: "center" }}>
+              <Typography variant="h3" sx={{ fontWeight: 700, color: theme.success }}>
+                ৳{orders.reduce((acc, order) => acc + (parseFloat(order.totalAmount) || 0), 0).toFixed(2)}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Total Revenue
+              </Typography>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <Paper sx={{ p: 2.5, borderRadius: 2, textAlign: "center" }}>
+              <Typography variant="h3" sx={{ fontWeight: 700, color: theme.secondary }}>
+                {orders.filter(o => new Date(o.createdAt).toDateString() === new Date().toDateString()).length}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Today's Orders
+              </Typography>
+            </Paper>
+          </Grid>
         </Grid>
-        <Grid item xs={12} sm={4}>
-          <Paper sx={{ p: 2.5, borderRadius: 2, textAlign: "center" }}>
-            <Typography variant="h3" sx={{ fontWeight: 700, color: theme.success }}>
-              ৳{orders.reduce((acc, order) => acc + (parseFloat(order.totalAmount) || 0), 0).toFixed(2)}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Total Revenue
-            </Typography>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <Paper sx={{ p: 2.5, borderRadius: 2, textAlign: "center" }}>
-            <Typography variant="h3" sx={{ fontWeight: 700, color: theme.secondary }}>
-              {orders.filter(o => new Date(o.createdAt).toDateString() === new Date().toDateString()).length}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Today's Orders
-            </Typography>
-          </Paper>
-        </Grid>
-      </Grid>
+      )}
 
       {/* Table Section */}
+      {activeTab === 0 && (
+      <>
       <Paper sx={{ borderRadius: 2, overflow: "hidden" }}>
         <Box sx={{ p: 2, borderBottom: "1px solid #eee", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Typography variant="h6" sx={{ fontWeight: 600, color: theme.text }}>
@@ -380,17 +435,19 @@ const AdminPanel = () => {
           </Box>
         )}
       </Paper>
+      </>
+      )}
 
-      {/* Snackbar for messages */}
       <Snackbar open={!!error} autoHideDuration={6000} onClose={() => setError(null)}>
         <Alert severity="error" onClose={() => setError(null)} sx={{ borderRadius: 2 }}>{error}</Alert>
       </Snackbar>
       <Snackbar open={!!success} autoHideDuration={6000} onClose={() => setSuccess(null)}>
         <Alert severity="success" onClose={() => setSuccess(null)} sx={{ borderRadius: 2 }}>{success}</Alert>
       </Snackbar>
-      
-      {/* Pet Interests Section */}
-      <Paper sx={{ borderRadius: 2, overflow: "hidden", mt: 3 }}>
+
+      {/* Pet Interests Section - Tab 2 */}
+      {activeTab === 2 && (
+      <Paper sx={{ borderRadius: 2, overflow: "hidden" }}>
         <Box sx={{ p: 2, borderBottom: "1px solid #eee", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Typography variant="h6" sx={{ fontWeight: 600, color: theme.text }}>
             Pet Adoption Requests
@@ -486,8 +543,75 @@ const AdminPanel = () => {
           </Box>
         )}
       </Paper>
+      )}
+
+      {/* Financial Donations Section */}
+      {activeTab === 3 && (
+      <Paper sx={{ borderRadius: 2, overflow: "hidden" }}>
+        <Box sx={{ p: 2, borderBottom: "1px solid #eee", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, color: theme.text }}>
+            Financial Donations
+          </Typography>
+          <Chip 
+            label={`${donations.length} donations`} 
+            size="small" 
+            sx={{ bgcolor: "#e8f5e9", color: "#2e7d32", fontWeight: 600 }} 
+          />
+        </Box>
+      {donations.length > 0 ? (
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow sx={{ bgcolor: "#f8f9fa" }}>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Donor Name</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Email</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Amount</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Payment Method</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Date</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Status</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {donations.map((donation, index) => (
+                  <TableRow 
+                    key={donation._id}
+                    sx={{ 
+                      "&:hover": { bgcolor: "#f8f9fa" },
+                      borderBottom: index < donations.length - 1 ? "1px solid #f0f0f0" : "none",
+                    }}
+                  >
+                    <TableCell>{donation.donorName}</TableCell>
+                    <TableCell>{donation.donorEmail}</TableCell>
+                    <TableCell sx={{ fontWeight: "bold", color: "#2e7d32" }}>৳{donation.amount}</TableCell>
+                    <TableCell>{donation.paymentMethod}</TableCell>
+                    <TableCell>{new Date(donation.timestamp).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={donation.status || "Completed"} 
+                        size="small" 
+                        sx={{ bgcolor: "#e8f5e9", color: "#2e7d32", fontWeight: 600 }} 
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        ) : (
+          <Box sx={{ p: 6, textAlign: "center" }}>
+            <Typography variant="h6" color="text.secondary">
+              No donations yet
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Financial donations will appear here
+            </Typography>
+          </Box>
+        )}
+      </Paper>
+      )}
 
       {/* Appointments Section */}
+      {activeTab === 1 && (
       <Paper sx={{ borderRadius: 2, overflow: "hidden", mt: 3 }}>
         <Box sx={{ p: 2, borderBottom: "1px solid #eee", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Typography variant="h6" sx={{ fontWeight: 600, color: theme.text }}>
@@ -565,6 +689,7 @@ const AdminPanel = () => {
           </Box>
         )}
       </Paper>
+      )}
       
       {/* Status Update Menu for Orders */}
       <Menu
@@ -589,6 +714,70 @@ const AdminPanel = () => {
           Mark as Delivered
         </MenuItem>
       </Menu>
+
+      {/* Pet Donations (Posted Pets) Section */}
+      {activeTab === 4 && (
+      <Paper sx={{ borderRadius: 2, overflow: "hidden", mt: 3 }}>
+        <Box sx={{ p: 2, borderBottom: "1px solid #eee", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, color: theme.text }}>
+            Posted Pets for Adoption
+          </Typography>
+          <Chip 
+            label={`${petDonations.length} pets`} 
+            size="small" 
+            sx={{ bgcolor: "#f3e5f5", color: "#7b1fa2", fontWeight: 600 }} 
+          />
+        </Box>
+        
+        {petDonations.length > 0 ? (
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow sx={{ bgcolor: "#f8f9fa" }}>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Pet Name</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Type</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Age</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Location</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Owner Email</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Owner Phone</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Reason</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {petDonations.map((donation, index) => (
+                  <TableRow 
+                    key={donation._id}
+                    sx={{ 
+                      "&:hover": { bgcolor: "#f8f9fa" },
+                      borderBottom: index < petDonations.length - 1 ? "1px solid #f0f0f0" : "none",
+                    }}
+                  >
+                    <TableCell>{donation.name || "Unknown"}</TableCell>
+                    <TableCell>{donation.type}</TableCell>
+                    <TableCell>{donation.age}</TableCell>
+                    <TableCell>{donation.location}</TableCell>
+                    <TableCell>{donation.email}</TableCell>
+                    <TableCell>{donation.phone}</TableCell>
+                    <TableCell sx={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {donation.reason}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        ) : (
+          <Box sx={{ p: 6, textAlign: "center" }}>
+            <Typography variant="h6" color="text.secondary">
+              No posted pets yet
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Pets posted for adoption will appear here
+            </Typography>
+          </Box>
+        )}
+      </Paper>
+      )}
 
       {/* Status Update Menu for Appointments */}
       <Menu
