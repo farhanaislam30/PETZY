@@ -9,6 +9,23 @@ export async function createAppointment(req, res) {
     
     // Debug: Check doctorId type and value
     console.log("[appointmentController] DEBUG - doctorId:", data.doctorId, "- Type:", typeof data.doctorId);
+
+    // Validate required fields
+    const missingFields = [];
+    if (!data.doctorId) missingFields.push("doctorId");
+    if (!data.doctorName) missingFields.push("doctorName");
+    if (!data.date) missingFields.push("date");
+    if (!data.time) missingFields.push("time");
+    if (!data.customerName) missingFields.push("customerName");
+    if (!data.customerEmail) missingFields.push("customerEmail");
+    
+    if (missingFields.length > 0) {
+      console.log("[appointmentController] ERROR - Missing required fields:", missingFields);
+      return res.status(400).json({
+        success: false,
+        message: `Missing required fields: ${missingFields.join(", ")}`,
+      });
+    }
     
     // Convert string doctorId to ObjectId if needed
     let doctorIdValue = data.doctorId;
@@ -31,7 +48,7 @@ export async function createAppointment(req, res) {
       notes: data.notes || "",
       customerName: data.customerName,
       customerEmail: data.customerEmail,
-      customerPhone: data.customerPhone,
+      customerPhone: data.customerPhone || "",
     });
 
     const savedAppointment = await newAppointment.save();

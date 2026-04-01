@@ -79,18 +79,43 @@ const Veterinary = () => {
 
     fetchDoctors();
 
-    // Load user info from token
-    const token = localStorage.getItem("token");
-    if (token) {
-      const decoded = decodeJWT(token);
-      if (decoded) {
-        setUserInfo({
-          name: decoded.name || "",
-          email: decoded.email || "",
-          phone: decoded.phone || "",
-        });
+    // Load user info from localStorage (works alongside JWT decoding)
+    const loadUserInfo = () => {
+      const storedName = localStorage.getItem("userName") || "";
+      const storedPhone = localStorage.getItem("petzy_user_phone") || "";
+      
+      // Also try to get email from JWT token
+      const token = localStorage.getItem("token");
+      let storedEmail = "";
+      if (token) {
+        const decoded = decodeJWT(token);
+        if (decoded) {
+          storedEmail = decoded.email || "";
+        }
       }
-    }
+      
+      setUserInfo({
+        name: storedName,
+        email: storedEmail,
+        phone: storedPhone,
+      });
+      
+      console.log("[Veterinary] Loaded user info from localStorage:", {
+        name: storedName,
+        email: storedEmail,
+        phone: storedPhone
+      });
+    };
+
+    // Try loading immediately
+    loadUserInfo();
+    
+    // Also listen for auth changes (in case user just logged in)
+    window.addEventListener('auth-change', loadUserInfo);
+    
+    return () => {
+      window.removeEventListener('auth-change', loadUserInfo);
+    };
   }, []);
 
   const handleBookAppointment = (doctor) => {
