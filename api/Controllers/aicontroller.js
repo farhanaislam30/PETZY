@@ -1,10 +1,10 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import rateLimit from "express-rate-limit";
 
 // Create rate limiter middleware: 10 requests per minute
 export const aiRateLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 10, // limit each IP to 10 requests per windowMs
+  windowMs: 30 * 1000, // 1 minute
+  max: 20, // limit each IP to 10 requests per windowMs
   message: {
     error: "Too many requests. Please wait 60 seconds before trying again."
   },
@@ -83,14 +83,16 @@ export const GenAi = async (req, res) => {
       });
     }
     
-    const ai = new GoogleGenAI({ apiKey });
+    // Use the newer @google/generative-ai package
+    const genAI = new GoogleGenerativeAI(apiKey);
     
     async function main(contents) {
-      const response = await ai.models.generateContent({
-        model: "gemini-2.0-flash",  // Updated to use valid model
-        contents: contents,
-      });
-      return response.text;
+      // Using gemini-2.0-flash - the stable 2.0 flash model with free access
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+      
+      const result = await model.generateContent(contents + " - give me a short answer");
+      const response = result.response;
+      return response.text();
     }
     
     const { contents } = req.body;
@@ -101,7 +103,7 @@ export const GenAi = async (req, res) => {
     
     // Use retry logic for the API call
     const data = await retryWithBackoff(
-      () => main(contents + " - give me a short answer"),
+      () => main(contents),
       1, // 1 retry
       1000 // initial delay of 1 second
     );

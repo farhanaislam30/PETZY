@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import ChatBot from "../ChatBot";
@@ -25,6 +25,22 @@ import {
 
 const Home = () => {
   const navigate = useNavigate();
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const heroImages = [
+    "/dog1.jpg",
+    "/cat1.jpg",
+    "/bird1.jpg",
+    "/rabbit1.jpg",
+  ];
+
+  // Auto-rotate carousel every 5 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroImages.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleFindPetClick = () => {
     navigate("/pet");
@@ -123,20 +139,52 @@ const Home = () => {
 
   return (
     <Box sx={{ fontFamily: "'Poppins', 'Roboto', sans-serif" }}>
-      {/* Hero Section */}
+      {/* Hero Section with Carousel */}
       <Box
         sx={{
           position: "relative",
           minHeight: "90vh",
-          background: `linear-gradient(135deg, rgba(63, 136, 238, 0.95) 0%, rgba(33, 150, 243, 0.9) 100%), url('/homepet.png')`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
+          background: "linear-gradient(135deg, #4A3228 0%, #6B4423 50%, #8B5A2B 100%)",
           display: "flex",
           alignItems: "center",
           marginTop: "60px",
+          overflow: "hidden",
         }}
       >
-        <Container maxWidth="lg">
+        {/* Carousel Background */}
+        {heroImages.map((image, index) => (
+          <Box
+            key={index}
+            sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundImage: `url('${image}')`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              opacity: currentSlide === index ? 1 : 0,
+              transition: "opacity 1s ease-in-out",
+              zIndex: 0,
+            }}
+          />
+        ))}
+
+        {/* Overlay Gradient for Text Readability */}
+        <Box
+          sx={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "linear-gradient(135deg, rgba(74, 50, 40, 0.85) 0%, rgba(107, 68, 35, 0.75) 50%, rgba(139, 90, 43, 0.7) 100%)",
+            zIndex: 1,
+          }}
+        />
+
+        <Container maxWidth="lg" sx={{ position: "relative", zIndex: 2 }}>
           <Grid container spacing={4} alignItems="center">
             <Grid item xs={12} md={6}>
               <Box
@@ -151,12 +199,13 @@ const Home = () => {
                 <Chip
                   label="🐾 Welcome to PETZY"
                   sx={{
-                    backgroundColor: "rgba(255,255,255,0.2)",
+                    backgroundColor: "rgba(255, 255, 255, 0.15)",
                     color: "white",
                     fontSize: "1rem",
                     fontWeight: 600,
                     mb: 2,
                     backdropFilter: "blur(10px)",
+                    border: "1px solid rgba(255, 255, 255, 0.2)",
                   }}
                 />
                 <Typography
@@ -167,14 +216,15 @@ const Home = () => {
                     color: "white",
                     lineHeight: 1.2,
                     mb: 2,
-                    textShadow: "2px 2px 4px rgba(0,0,0,0.3)",
+                    textShadow: "2px 2px 8px rgba(0, 0, 0, 0.4)",
+                    fontFamily: "'Playfair Display', 'Georgia', serif",
                   }}
                 >
                   Your Pets Are{" "}
                   <Box
                     component="span"
                     sx={{
-                      background: "linear-gradient(45deg, #FFD700, #FFA500)",
+                      background: "linear-gradient(45deg, #FF7F50, #FF6347)",
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
                     }}
@@ -185,10 +235,12 @@ const Home = () => {
                 <Typography
                   variant="h6"
                   sx={{
-                    color: "rgba(255,255,255,0.9)",
+                    color: "rgba(255, 255, 255, 0.95)",
                     mb: 3,
                     fontWeight: 400,
                     lineHeight: 1.8,
+                    textShadow: "1px 1px 4px rgba(0, 0, 0, 0.3)",
+                    fontSize: { xs: "0.95rem", md: "1.1rem" },
                   }}
                 >
                   Ensure you are fully prepared to provide proper care and
@@ -203,18 +255,19 @@ const Home = () => {
                     endIcon={<ArrowForward />}
                     onClick={handleFindPetClick}
                     sx={{
-                      background: "linear-gradient(45deg, #FFD700, #FFA500)",
-                      color: "#333",
+                      background: "linear-gradient(45deg, #FF7F50, #E9967A)",
+                      color: "white",
                       fontWeight: 700,
                       fontSize: "1.1rem",
                       px: 4,
                       py: 1.5,
                       borderRadius: "30px",
-                      boxShadow: "0 4px 15px rgba(255, 215, 0, 0.4)",
+                      boxShadow: "0 4px 20px rgba(255, 127, 80, 0.5)",
                       transition: "all 0.3s ease",
                       "&:hover": {
                         transform: "translateY(-3px)",
-                        boxShadow: "0 8px 25px rgba(255, 215, 0, 0.5)",
+                        boxShadow: "0 8px 30px rgba(255, 127, 80, 0.6)",
+                        background: "linear-gradient(45deg, #FF6347, #FF7F50)",
                       },
                     }}
                   >
@@ -225,15 +278,17 @@ const Home = () => {
                     size="large"
                     onClick={handlePostPetClick}
                     sx={{
-                      borderColor: "white",
+                      borderColor: "rgba(255, 255, 255, 0.6)",
                       color: "white",
                       fontWeight: 600,
                       fontSize: "1.1rem",
                       px: 4,
                       py: 1.5,
                       borderRadius: "30px",
+                      backdropFilter: "blur(10px)",
+                      backgroundColor: "rgba(255, 255, 255, 0.1)",
                       "&:hover": {
-                        backgroundColor: "rgba(255,255,255,0.1)",
+                        backgroundColor: "rgba(255, 255, 255, 0.2)",
                         borderColor: "white",
                       },
                     }}
@@ -243,31 +298,39 @@ const Home = () => {
                 </Stack>
               </Box>
             </Grid>
-            <Grid item xs={12} md={6} sx={{ display: { xs: "none", md: "block" } }}>
-              <Box
-                sx={{
-                  position: "relative",
-                  animation: "float 3s ease-in-out infinite",
-                  "@keyframes float": {
-                    "0%, 100%": { transform: "translateY(0)" },
-                    "50%": { transform: "translateY(-20px)" },
-                  },
-                }}
-              >
-                <Box
-                  component="img"
-                  src="/homepet.png"
-                  alt="Happy pets"
-                  sx={{
-                    maxWidth: "100%",
-                    height: "auto",
-                    filter: "drop-shadow(0 20px 40px rgba(0,0,0,0.3))",
-                  }}
-                />
-              </Box>
-            </Grid>
           </Grid>
         </Container>
+
+        {/* Carousel Navigation Dots */}
+        <Box
+          sx={{
+            position: "absolute",
+            bottom: 30,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 3,
+            display: "flex",
+            gap: 1.5,
+          }}
+        >
+          {heroImages.map((_, index) => (
+            <Box
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              sx={{
+                width: currentSlide === index ? 30 : 12,
+                height: 12,
+                borderRadius: "6px",
+                backgroundColor: currentSlide === index ? "#FF7F50" : "rgba(255, 255, 255, 0.4)",
+                cursor: "pointer",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  backgroundColor: currentSlide === index ? "#FF7F50" : "rgba(255, 255, 255, 0.7)",
+                },
+              }}
+            />
+          ))}
+        </Box>
       </Box>
 
       {/* Stats Section */}
