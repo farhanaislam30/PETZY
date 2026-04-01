@@ -23,7 +23,7 @@ const Footer = () => {
             </p>
             <div className="d-flex gap-3">
               <a
-                href="mailto:farhananitu30@gmail.com"
+                href="mailto:ridwannafi@gmail.com"
                 className="text-light opacity-75"
               >
                 <i className="bi bi-envelope fs-5"></i>
@@ -115,8 +115,8 @@ const Footer = () => {
                 </Link>
               </li>
               <li className="mb-2">
-                <a href="mailto:farhananitu30@gmail.com" className="text-light opacity-75 text-decoration-none">
-                  Support: farhananitu30@gmail.com
+                <a href="mailto:ridwannafi@gmail.com" className="text-light opacity-75 text-decoration-none">
+                  Support: ridwannafi@gmail.com
                 </a>
               </li>
             </ul>
