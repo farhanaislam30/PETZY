@@ -138,7 +138,7 @@ const ShowInterestForm = ({ pet, onClose, onInterestSubmitted }) => {
       const response = await fetch("http://localhost:3000/show-interest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, petId }),
+        body: JSON.stringify({ ...formData, petId, petName: pet?.name || "" }),
       });
 
       const data = await response.json();

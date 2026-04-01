@@ -80,6 +80,20 @@ const AdminPanel = () => {
     }
   };
 
+  const updatePetInterestStatus = async (id, newStatus) => {
+    try {
+      const response = await axios.put(`${API_BASE}/show-interest/status/${id}`, { status: newStatus });
+      if (response.data.success) {
+        setSuccess(`Pet adoption request ${newStatus.toLowerCase()} successfully!`);
+        // Refresh the list
+        fetchPetInterests();
+      }
+    } catch (err) {
+      console.error("Error updating status:", err);
+      setError("Failed to update status");
+    }
+  };
+
   const fetchAppointments = async () => {
     try {
       const response = await axios.get(`${API_BASE}/api/appointments`);
@@ -393,12 +407,14 @@ const AdminPanel = () => {
             <Table>
               <TableHead>
                 <TableRow sx={{ bgcolor: "#f8f9fa" }}>
-                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Pet ID</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Pet</TableCell>
                   <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Email</TableCell>
                   <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Phone</TableCell>
                   <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Living Situation</TableCell>
                   <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Experience</TableCell>
                   <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Date</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Status</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -410,13 +426,49 @@ const AdminPanel = () => {
                       borderBottom: index < petInterests.length - 1 ? "1px solid #f0f0f0" : "none",
                     }}
                   >
-                    <TableCell>#{interest.petId}</TableCell>
+                    <TableCell>{interest.petName || `#${interest.petId}`}</TableCell>
                     <TableCell>{interest.email}</TableCell>
                     <TableCell>{interest.phone}</TableCell>
                     <TableCell>{interest.livingSituation}</TableCell>
                     <TableCell>{interest.experience}</TableCell>
                     <TableCell>
                       {new Date(interest.timestamp).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={interest.status || "Pending"} 
+                        size="small" 
+                        sx={{ 
+                          bgcolor: interest.status === "Approved" ? "#e8f5e9" : interest.status === "Rejected" ? "#ffebee" : "#fff3e0",
+                          color: interest.status === "Approved" ? "#2e7d32" : interest.status === "Rejected" ? "#d32f2f" : "#ed6c02",
+                          fontWeight: 600,
+                          fontSize: "0.75rem",
+                        }} 
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {interest.status !== "Approved" && (
+                        <Button
+                          size="small"
+                          variant="contained"
+                          color="success"
+                          onClick={() => updatePetInterestStatus(interest._id, "Approved")}
+                          sx={{ mr: 1, minWidth: "auto", py: 0.5, fontSize: "0.7rem" }}
+                        >
+                          Approve
+                        </Button>
+                      )}
+                      {interest.status !== "Rejected" && (
+                        <Button
+                          size="small"
+                          variant="contained"
+                          color="error"
+                          onClick={() => updatePetInterestStatus(interest._id, "Rejected")}
+                          sx={{ minWidth: "auto", py: 0.5, fontSize: "0.7rem" }}
+                        >
+                          Reject
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

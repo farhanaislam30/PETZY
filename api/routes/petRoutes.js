@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { showInterest, getPetInterestsByEmail } from "../Controllers/showInterestController.js";
+import { showInterest, getPetInterestsByEmail, updatePetInterestStatus } from "../Controllers/showInterestController.js";
 import PetInterest from "../models/PetInterest.js";
 
 const router = express.Router();
@@ -22,5 +22,8 @@ router.get("/", async (req, res) => {
 
 // Route to get pet interests by email
 router.get("/email/:email", getPetInterestsByEmail);
+
+// Route to update pet interest status (admin action)
+router.put("/status/:id", updatePetInterestStatus);
 
 export default router;

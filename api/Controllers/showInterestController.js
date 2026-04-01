@@ -6,11 +6,12 @@ export async function showInterest(req, res) {
   console.log("Content-Type:", req.headers["content-type"]);
   
   try {
-    const { petId, email, phone, livingSituation, experience, otherPets } = req.body;
+    const { petId, petName, email, phone, livingSituation, experience, otherPets } = req.body;
     
     // Detailed field validation
     console.log("=== Field Validation ===");
     console.log("petId:", petId, "- Type:", typeof petId);
+    console.log("petName:", petName, "- Type:", typeof petName);
     console.log("email:", email, "- Type:", typeof email);
     console.log("phone:", phone, "- Type:", typeof phone);
     console.log("livingSituation:", livingSituation, "- Type:", typeof livingSituation);
@@ -33,11 +34,13 @@ export async function showInterest(req, res) {
     // Create a new interest entry
     const newInterest = new PetInterest({
       petId,
+      petName: petName || "",
       email,
       phone,
       livingSituation,
       experience,
       otherPets,
+      status: "Pending",
     });
 
     // Save to database
@@ -65,5 +68,36 @@ export async function getPetInterestsByEmail(req, res) {
       success: false,
       message: error.message,
     });
+  }
+}
+
+// Update pet interest status (admin action)
+export async function updatePetInterestStatus(req, res) {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    console.log("[updatePetInterestStatus] ID:", id, "Status:", status);
+    
+    // Validate status value
+    if (!["Pending", "Approved", "Rejected"].includes(status)) {
+      return res.status(400).json({ success: false, message: "Invalid status value" });
+    }
+    
+    const updatedInterest = await PetInterest.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+    
+    if (!updatedInterest) {
+      return res.status(404).json({ success: false, message: "Pet interest not found" });
+    }
+    
+    console.log("[updatePetInterestStatus] Updated:", updatedInterest);
+    res.json({ success: true, interest: updatedInterest, message: "Status updated successfully" });
+  } catch (error) {
+    console.error("Error updating pet interest status:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 }

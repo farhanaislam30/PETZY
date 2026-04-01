@@ -189,6 +189,9 @@ const Login = () => {
         console.error("Error decoding token:", err);
       }
 
+      // Dispatch auth change event to update navbar in same window
+      window.dispatchEvent(new Event('auth-change'));
+
       // Redirect admin users to admin panel, others to home
       if (response.data.role === "admin") {
         navigate("/admin");

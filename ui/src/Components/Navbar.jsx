@@ -47,42 +47,72 @@ const Navbar = () => {
 
   // Check if token exists and decode user info when component mounts
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const storedRole = localStorage.getItem("userRole");
-    const storedName = localStorage.getItem("userName");
-    
-    console.log('[Navbar Debug] Token exists:', !!token);
-    console.log('[Navbar Debug] storedRole:', storedRole);
-    console.log('[Navbar Debug] storedName:', storedName);
-    
-    if (token) {
-      setIsAuthenticated(true);
+    const checkAuth = () => {
+      const token = localStorage.getItem("token");
+      const storedRole = localStorage.getItem("userRole");
+      const storedName = localStorage.getItem("userName");
       
-      // Try to get role from stored or decode from token
-      if (storedRole) {
-        console.log('[Navbar Debug] Setting role from localStorage:', storedRole);
-        setUserRole(storedRole);
-      } else {
-        const decoded = decodeJWT(token);
-        console.log('[Navbar Debug] Decoded JWT:', decoded);
-        if (decoded) {
-          setUserRole(decoded.role);
-          localStorage.setItem("userRole", decoded.role);
-          console.log('[Navbar Debug] Set role from JWT:', decoded.role);
-        }
-      }
+      console.log('[Navbar Debug] Token exists:', !!token);
+      console.log('[Navbar Debug] storedRole:', storedRole);
+      console.log('[Navbar Debug] storedName:', storedName);
       
-      // Get user name
-      if (storedName) {
-        setUserName(storedName);
-      } else {
-        const decoded = decodeJWT(token);
-        if (decoded && decoded.name) {
-          setUserName(decoded.name);
-          localStorage.setItem("userName", decoded.name);
+      if (token) {
+        setIsAuthenticated(true);
+        
+        // Try to get role from stored or decode from token
+        if (storedRole) {
+          console.log('[Navbar Debug] Setting role from localStorage:', storedRole);
+          setUserRole(storedRole);
+        } else {
+          const decoded = decodeJWT(token);
+          console.log('[Navbar Debug] Decoded JWT:', decoded);
+          if (decoded) {
+            setUserRole(decoded.role);
+            localStorage.setItem("userRole", decoded.role);
+            console.log('[Navbar Debug] Set role from JWT:', decoded.role);
+          }
         }
+        
+        // Get user name
+        if (storedName) {
+          setUserName(storedName);
+        } else {
+          const decoded = decodeJWT(token);
+          if (decoded && decoded.name) {
+            setUserName(decoded.name);
+            localStorage.setItem("userName", decoded.name);
+          }
+        }
+      } else {
+        setIsAuthenticated(false);
+        setUserRole(null);
+        setUserName(null);
       }
-    }
+    };
+    
+    // Check auth on mount
+    checkAuth();
+    
+    // Listen for storage changes (e.g., when user logs in/out in another tab or component)
+    const handleStorageChange = (e) => {
+      if (e.key === 'token' || e.key === 'userRole' || e.key === 'userName') {
+        console.log('[Navbar Debug] Storage changed:', e.key);
+        checkAuth();
+      }
+    };
+    
+    // Listen for custom auth change event (dispatched when login/logout happens in same window)
+    const handleAuthChange = () => {
+      console.log('[Navbar Debug] Auth change event received');
+      checkAuth();
+    };
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('auth-change', handleAuthChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('auth-change', handleAuthChange);
+    };
   }, []);
 
   const handleLogout = () => {
@@ -93,6 +123,10 @@ const Navbar = () => {
     setIsAuthenticated(false);
     setUserRole(null);
     setUserName(null);
+    
+    // Dispatch auth change event to update navbar
+    window.dispatchEvent(new Event('auth-change'));
+    
     navigate("/login");
   };
 
@@ -101,7 +135,7 @@ const Navbar = () => {
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
       <div className="container">
-        <Link to="/" className="navbar-brand d-flex align-items-center">
+        <Link to={isAdmin ? "/admin" : "/"} className="navbar-brand d-flex align-items-center">
           <img src="/logo.png" alt="Petzy Logo" className="logo me-2" />
           <span className="fw-bold fs-4">PETZY</span>
         </Link>

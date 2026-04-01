@@ -645,12 +645,13 @@ const Profile = () => {
                   <Table>
                     <TableHead>
                       <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                        <TableCell>Pet ID</TableCell>
+                        <TableCell>Pet</TableCell>
                         <TableCell>Date</TableCell>
                         <TableCell>Phone</TableCell>
                         <TableCell>Living Situation</TableCell>
                         <TableCell>Experience</TableCell>
                         <TableCell>Other Pets</TableCell>
+                        <TableCell>Status</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -662,6 +663,17 @@ const Profile = () => {
                           <TableCell>{interest.livingSituation}</TableCell>
                           <TableCell>{interest.experience}</TableCell>
                           <TableCell>{interest.otherPets || 'None'}</TableCell>
+                          <TableCell>
+                            <Chip 
+                              label={interest.status || "Pending"} 
+                              size="small" 
+                              sx={{ 
+                                bgcolor: interest.status === "Approved" ? "#e8f5e9" : interest.status === "Rejected" ? "#ffebee" : "#fff3e0",
+                                color: interest.status === "Approved" ? "#2e7d32" : interest.status === "Rejected" ? "#d32f2f" : "#ed6c02",
+                                fontWeight: 600,
+                              }} 
+                            />
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
