@@ -7,12 +7,32 @@ const ChatBot = () => {
   ]);
   const [input, setInput] = useState("");
   const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [lastRequestTime, setLastRequestTime] = useState(0);
+
+  // Client-side rate limiting - minimum 3 seconds between requests
+  const MIN_REQUEST_INTERVAL = 3000;
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || isLoading) return;
+
+    // Client-side rate limiting check
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastRequestTime;
+    
+    if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
+      const waitTime = (MIN_REQUEST_INTERVAL - timeSinceLastRequest) / 1000;
+      setMessages((prev) => [
+        ...prev,
+        { text: `Please wait ${waitTime.toFixed(1)}s before sending another message 🐾`, sender: "bot" },
+      ]);
+      return;
+    }
 
     const userMessage = { text: input, sender: "user" };
     setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+    setLastRequestTime(now);
 
     try {
       // Send the user input to backend AI API
@@ -27,13 +47,23 @@ const ChatBot = () => {
       console.log("AI response:", botReply);
       setMessages((prev) => [...prev, { text: botReply, sender: "bot" }]);
       setInput(""); // clear input field
+      setIsLoading(false);
     } catch (error) {
-        console.log(error);
-      console.error("Chat API error:", error.response?.data || error.message);
+        console.error("Chat API error:", error.response?.data || error.message);
+      setIsLoading(false);
 
-      const errorMessage = error.response?.data?.error || 
-                          error.message || 
-                          "Something went wrong with AI 🐾";
+      // Parse the error response to provide better user feedback
+      const errorData = error.response?.data;
+      let errorMessage = "Something went wrong with AI 🐾";
+      
+      if (errorData?.error) {
+        errorMessage = errorData.error;
+      } else if (error.response?.status === 429) {
+        // Check if it's a rate limit from our server or from Google API
+        errorMessage = "AI service is busy. Please wait a moment and try again 🐾";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
       
       setMessages((prev) => [
         ...prev,
@@ -153,10 +183,11 @@ const ChatBot = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask something about pets..."
+              disabled={isLoading}
               onKeyPress={(e) => e.key === "Enter" && handleSend()}
             />
-            <button className="btn btn-warning ms-2" onClick={handleSend}>
-              ➤
+            <button className="btn btn-warning ms-2" onClick={handleSend} disabled={isLoading}>
+              {isLoading ? '⏳' : '➤'}
             </button>
           </div>
         </div>

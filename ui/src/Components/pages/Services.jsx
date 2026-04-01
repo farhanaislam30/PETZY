@@ -2,7 +2,7 @@ import React from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Formik, Form, Field } from "formik";
+import { Formik, Form, useField } from "formik";
 import {
   Box,
   Container,
@@ -26,6 +26,18 @@ import {
   CloudUpload,
   CheckCircle,
 } from "@mui/icons-material";
+
+const FormikTextField = ({ ...props }) => {
+  const [fieldProps, metaProps] = useField(props);
+  return (
+    <TextField
+      {...fieldProps}
+      {...props}
+      error={metaProps.touched && !!metaProps.error}
+      helperText={metaProps.touched && metaProps.error ? metaProps.error : ""}
+    />
+  );
+};
 
 const Services = () => {
   const navigate = useNavigate();
@@ -58,6 +70,8 @@ const Services = () => {
       return;
     }
 
+    console.log("Submitting pet values:", values);
+
     try {
       const response = await axios.post(
         "http://localhost:3000/donates",
@@ -68,6 +82,7 @@ const Services = () => {
           },
         }
       );
+      console.log("Axios response:", response);
       setSuccessMsg("Pet submitted for adoption successfully! We will contact you soon.");
       resetForm();
     } catch (error) {
@@ -188,7 +203,7 @@ const Services = () => {
 
                   <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
-                      <TextField
+                      <FormikTextField
                         fullWidth
                         label="Pet Name"
                         name="name"
@@ -204,7 +219,7 @@ const Services = () => {
                       />
                     </Grid>
                     <Grid item xs={12} sm={6}>
-                      <TextField
+                      <FormikTextField
                         fullWidth
                         label="Pet Age"
                         name="age"
@@ -216,7 +231,7 @@ const Services = () => {
 
                   <Grid container spacing={2} sx={{ mt: 1 }}>
                     <Grid item xs={12} sm={6}>
-                      <TextField
+                      <FormikTextField
                         fullWidth
                         label="Location"
                         name="location"
@@ -232,7 +247,7 @@ const Services = () => {
                       />
                     </Grid>
                     <Grid item xs={12} sm={6}>
-                      <TextField
+                      <FormikTextField
                         fullWidth
                         select
                         label="Pet Type"
@@ -245,11 +260,11 @@ const Services = () => {
                             {type}
                           </MenuItem>
                         ))}
-                      </TextField>
+                      </FormikTextField>
                     </Grid>
                   </Grid>
 
-                  <TextField
+                  <FormikTextField
                     fullWidth
                     label="Reason for Giving a Pet"
                     name="reason"
@@ -271,7 +286,7 @@ const Services = () => {
 
                   <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
-                      <TextField
+                      <FormikTextField
                         fullWidth
                         label="Email"
                         name="email"
@@ -288,7 +303,7 @@ const Services = () => {
                       />
                     </Grid>
                     <Grid item xs={12} sm={6}>
-                      <TextField
+                      <FormikTextField
                         fullWidth
                         label="Phone Number"
                         name="phone"

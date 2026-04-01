@@ -1,18 +1,19 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import rateLimit from "express-rate-limit";
 
-// Create rate limiter middleware: 10 requests per minute
+// Create rate limiter middleware: 100 requests per minute
+// Note: Commented out to debug 429 errors. Enable if needed.
 export const aiRateLimiter = rateLimit({
-  windowMs: 30 * 1000, // 1 minute
-  max: 20, // limit each IP to 10 requests per windowMs
+  windowMs: 60 * 1000, // 1 minute
+  max: 100, // limit each IP to 100 requests per windowMs
   message: {
-    error: "Too many requests. Please wait 60 seconds before trying again."
+    error: "Too many requests. Please wait 10 seconds before trying again."
   },
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res, next, options) => {
     res.status(429).json({
-      error: `Too many requests. Please wait 60 seconds before trying again.`
+      error: `Too many requests. Please wait 10 seconds before trying again.`
     });
   }
 });
@@ -34,7 +35,7 @@ const isRateLimitError = (error) => {
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Retry logic with exponential backoff for transient errors
-const retryWithBackoff = async (fn, maxRetries = 1, initialDelay = 1000) => {
+const retryWithBackoff = async (fn, maxRetries = 3, initialDelay = 2000) => {
   let lastError;
   
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -43,18 +44,25 @@ const retryWithBackoff = async (fn, maxRetries = 1, initialDelay = 1000) => {
     } catch (error) {
       lastError = error;
       
+      // Check if it's a rate limit error by examining the error more thoroughly
+      const is429 = error.status === 429 || 
+        (error.message && error.message.includes && error.message.includes('429')) ||
+        (error.message && error.message.toLowerCase && error.message.toLowerCase().includes('rate limit')) ||
+        (error.message && error.message.toLowerCase && error.message.toLowerCase().includes('too many requests'));
+      
       // If it's a rate limit error, don't retry immediately - wait longer
-      if (isRateLimitError(error)) {
-        console.log(`Rate limit detected, attempt ${attempt + 1}/${maxRetries + 1}`);
+      if (is429 || isRateLimitError(error)) {
+        console.log(`Rate limit detected (429), attempt ${attempt + 1}/${maxRetries + 1}`);
         if (attempt < maxRetries) {
-          const delay = initialDelay * Math.pow(2, attempt) * 2; // Longer delay for rate limits
+          // Exponential backoff: 2s, 4s, 8s for rate limits
+          const delay = initialDelay * Math.pow(2, attempt);
           console.log(`Waiting ${delay}ms before retry...`);
           await sleep(delay);
         }
       } else {
-        // For other transient errors, use shorter delay
+        // For other transient errors, use shorter delay but still retry
         if (attempt < maxRetries) {
-          const delay = initialDelay * Math.pow(2, attempt);
+          const delay = initialDelay * Math.pow(2, attempt) / 2; // 1s, 2s, 4s for other errors
           console.log(`Transient error, retrying in ${delay}ms...`);
           await sleep(delay);
         }
@@ -104,8 +112,8 @@ export const GenAi = async (req, res) => {
     // Use retry logic for the API call
     const data = await retryWithBackoff(
       () => main(contents),
-      1, // 1 retry
-      1000 // initial delay of 1 second
+      3, // 3 retries
+      2000 // initial delay of 2 seconds
     );
     
     console.log("AI response:", data);
@@ -119,7 +127,7 @@ export const GenAi = async (req, res) => {
     // Check if it's a rate limit (429) or quota exceeded error
     if (isRateLimitError(e)) {
       return res.status(429).json({ 
-        error: "Too many requests. Please wait 60 seconds before trying again." 
+        error: "Too many requests. Please wait 30 seconds before trying again." 
       });
     }
     

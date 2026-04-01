@@ -734,6 +734,7 @@ const AdminPanel = () => {
             <Table>
               <TableHead>
                 <TableRow sx={{ bgcolor: "#f8f9fa" }}>
+                  <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Image</TableCell>
                   <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Pet Name</TableCell>
                   <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Type</TableCell>
                   <TableCell sx={{ fontWeight: 600, color: theme.textSecondary, py: 2 }}>Age</TableCell>
@@ -752,6 +753,16 @@ const AdminPanel = () => {
                       borderBottom: index < petDonations.length - 1 ? "1px solid #f0f0f0" : "none",
                     }}
                   >
+                    <TableCell>
+                      {donation.image && (
+                        <Box 
+                          component="img" 
+                          src={donation.image} 
+                          alt={donation.name}
+                          sx={{ width: 50, height: 50, objectFit: "cover", borderRadius: 1 }}
+                        />
+                      )}
+                    </TableCell>
                     <TableCell>{donation.name || "Unknown"}</TableCell>
                     <TableCell>{donation.type}</TableCell>
                     <TableCell>{donation.age}</TableCell>

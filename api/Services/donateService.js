@@ -1,7 +1,8 @@
 import Donate from "../models/donators.js";
 
 async function createDonate_DB(userData) {
-  const { name, age, location, type, image, email, phone } = userData;
+  console.log("donateService - received from controller:", userData);
+  const { name, age, location, type, image, email, phone, reason } = userData;
 
   const nDonate = new Donate({
     name: name,
@@ -11,8 +12,10 @@ async function createDonate_DB(userData) {
     type: type,
     email: email,
     phone: phone,
+    reason: reason,
   });
 
+  console.log("donateService - about to save to DB:", nDonate);
   return await nDonate.save();
 }
 
